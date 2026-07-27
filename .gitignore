@@ -1,0 +1,5 @@
+node_modules/
+.env
+cms/.next/
+web/dist/
+web/.astro/
