@@ -1,0 +1,334 @@
+/* ==========================================================================
+   Global Reset & Base Typography
+   ========================================================================== */
+
+/* Modern CSS Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  background-color: var(--color-bg);
+  /* Keep UA-rendered chrome (scrollbars, form controls) in step with the theme.
+     Driven by each theme's own --theme-scheme so adding a theme needs no change
+     here. */
+  color-scheme: var(--theme-scheme, light);
+}
+
+/* Base Body Styles */
+body {
+  min-height: 100dvh;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--heading-weight);
+  text-transform: var(--heading-transform);
+  letter-spacing: var(--heading-tracking);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--text-4xl); letter-spacing: -0.025em; }
+h2 { font-size: var(--text-3xl); letter-spacing: -0.02em; }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+h5 { font-size: var(--text-lg); }
+h6 { font-size: var(--text-base); }
+
+/* Body text */
+p {
+  max-width: 65ch;
+  text-wrap: pretty;
+}
+
+/* Links */
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  background-image: linear-gradient(var(--color-accent), var(--color-accent));
+  background-size: 0% 1px;
+  background-position: left bottom;
+  background-repeat: no-repeat;
+  transition: background-size var(--duration-base) var(--ease-out-expo),
+              color var(--duration-base) var(--ease-out-expo);
+}
+
+a:hover {
+  background-size: 100% 1px;
+}
+
+/* Responsive Images */
+img,
+picture,
+video,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Form Elements — Inherit Fonts */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* Focus Styles for Accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Section label — small mono uppercase accent label */
+.section-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-accent);
+  margin-bottom: var(--space-3);
+}
+
+/* Section divider — full-width gradient line */
+.section-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-accent) 50%,
+    transparent 100%
+  );
+  opacity: 0.3;
+  margin-block: var(--space-16);
+}
+
+/* Visually Hidden (screen-reader only) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ==========================================================================
+   Monospace & Code
+   ========================================================================== */
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+code {
+  padding: 0.15em 0.4em;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-sm);
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+/* Chimera Display accent — for short ceremonial strings like "2027".
+   Weight 400 only: the family ships a single face, so any other weight would be
+   synthesized by the browser. Never use for headings or running text. */
+.u-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.u-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.u-muted {
+  color: var(--color-text-muted);
+}
+
+/* Reading measure for long-form pages, alongside .container in grid.css. */
+.container-narrow {
+  max-width: var(--container-narrow);
+  margin-inline: auto;
+  padding-inline: var(--grid-gutter);
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.button {
+  display: inline-block;
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-align: center;
+  /* Dark ink on the accent fill. White fails WCAG AA against every CCA accent
+     (teal #3DD6C9 ~1.9:1, #00BFB3 ~2.3:1) — see --color-on-accent. */
+  color: var(--color-on-accent);
+  background-color: var(--color-accent);
+  background-image: none; /* opt out of the animated link underline */
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.button:hover {
+  background-color: color-mix(in srgb, var(--color-accent) 85%, black);
+  background-size: auto;
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button--ghost {
+  color: var(--color-accent);
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.button--ghost:hover {
+  color: var(--color-on-accent);
+  background-color: var(--color-accent);
+}
+
+/* ==========================================================================
+   Prose — CMS rich text container
+   Tags emitted by lib/richtext.ts: p, h1-h6, strong, em, u, s, code, sub, sup,
+   a, ul, ol, li, blockquote, hr, br
+   ========================================================================== */
+
+.prose {
+  color: var(--color-text-muted);
+  line-height: 1.75;
+}
+
+.prose > * + * {
+  margin-block-start: var(--space-4);
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  margin-block-start: var(--space-8);
+  color: var(--color-text);
+}
+
+.prose ul,
+.prose ol {
+  padding-inline-start: var(--space-6);
+}
+
+.prose li + li {
+  margin-block-start: var(--space-2);
+}
+
+/* Checklists render their own input, so drop the marker. */
+.prose ul.checklist {
+  list-style: none;
+  padding-inline-start: 0;
+}
+
+.prose blockquote {
+  padding-inline-start: var(--space-4);
+  border-inline-start: 2px solid var(--color-accent);
+  font-family: var(--font-heading);
+  font-style: italic;
+  color: var(--color-text);
+}
+
+.prose strong {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.prose a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.prose hr {
+  border: none;
+  height: 1px;
+  background-color: var(--color-border);
+  margin-block: var(--space-8);
+}
+
+.prose :first-child { margin-block-start: 0; }
+.prose :last-child { margin-block-end: 0; }
+
+/* ==========================================================================
+   No-JS guard for the reveal system in animations.css
+   ========================================================================== */
+
+/* .reveal* start at opacity 0 and wait for the IntersectionObserver in
+   Layout.astro to add .is-visible. Without this guard, a failed or blocked
+   script would leave the content permanently invisible — so only opt into the
+   hidden start state once JS has confirmed itself by setting .js on <html>. */
+html:not(.js) .reveal,
+html:not(.js) .reveal-scale,
+html:not(.js) .reveal-left,
+html:not(.js) .reveal-right {
+  opacity: 1;
+  transform: none;
+}
+
+html:not(.js) .reveal-clip {
+  clip-path: none;
+}

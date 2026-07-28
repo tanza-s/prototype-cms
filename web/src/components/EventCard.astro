@@ -1,0 +1,142 @@
+---
+import type { Event } from '../types/payload'
+import { formatEventRangeShort, toDateTimeAttr } from '../lib/dates'
+
+interface Props {
+  event: Event
+  /** Forwarded from the parent so reveal/stagger classes land on the root. */
+  class?: string
+}
+
+const { event, class: className } = Astro.props
+
+const dateRange = formatEventRangeShort(event.startDate, event.endDate)
+---
+
+<a
+  href={`/events/${event.slug}`}
+  class:list={['event-card', className]}
+>
+  {
+    event.image && (
+      <div class="event-card__image">
+        <img src={event.image.url} alt={event.image.alt} loading="lazy" />
+      </div>
+    )
+  }
+
+  <div class="event-card__content">
+    <h3 class="event-card__title">{event.title}</h3>
+
+    <dl class="event-card__meta">
+      <dt class="sr-only">Date</dt>
+      <dd>
+        <time class="u-mono event-card__date" datetime={toDateTimeAttr(event.startDate)}>
+          {dateRange}
+        </time>
+      </dd>
+      <dt class="sr-only">Location</dt>
+      <dd class="event-card__location">{event.location}</dd>
+    </dl>
+
+    <div class="event-card__description prose" set:html={event.description} />
+
+    {event.rsvpLink && <span class="button event-card__rsvp">RSVP</span>}
+  </div>
+</a>
+
+<style>
+  .event-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: inherit;
+    background-color: var(--color-surface);
+    background-image: none; /* opt out of the animated link underline */
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card-rest);
+    transition:
+      box-shadow var(--duration-base) var(--ease-out-expo),
+      transform var(--duration-base) var(--ease-out-expo),
+      border-color var(--duration-base) var(--ease-out-expo);
+  }
+
+  .event-card:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+
+  .event-card__image {
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .event-card__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--duration-slow) var(--ease-out-expo);
+  }
+
+  .event-card:hover .event-card__image img {
+    transform: scale(1.03);
+  }
+
+  .event-card__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+  }
+
+  .event-card__title {
+    font-size: var(--text-lg);
+    color: var(--color-text);
+    transition: color var(--duration-fast) var(--ease-out-expo);
+  }
+
+  .event-card:hover .event-card__title {
+    color: var(--color-accent);
+  }
+
+  .event-card__meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+
+  .event-card__meta dd {
+    margin: 0;
+  }
+
+  .event-card__date {
+    font-size: var(--text-xs);
+    color: var(--color-accent);
+    letter-spacing: 0.02em;
+  }
+
+  .event-card__location {
+    color: var(--color-text-muted);
+  }
+
+  .event-card__description {
+    flex: 1;
+    font-size: var(--text-sm);
+  }
+
+  /* Cards sit in a narrow column, so keep the excerpt from running long. */
+  .event-card__description :global(p) {
+    max-width: none;
+  }
+
+  .event-card__rsvp {
+    align-self: flex-start;
+    margin-block-start: var(--space-2);
+  }
+</style>

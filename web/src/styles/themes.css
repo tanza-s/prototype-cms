@@ -1,0 +1,235 @@
+/* ==========================================================================
+   Theme Definitions — Prismatic Light Design System
+   Foundation tokens + per-event theme overrides
+   ========================================================================== */
+
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+:root {
+  /* Typography — Font Families (four-font system)
+     --font-display is a ceremonial accent face: single 400 weight and hard to
+     read at length. Use it sparingly on short strings ("2027") via .u-display,
+     never for headings or body copy. */
+  --font-display: "Chimera Display", Georgia, "Times New Roman", serif;
+  --font-heading: "Merriweather", Georgia, "Times New Roman", serif;
+  --font-body: "Lineto Brown", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Typography — Scale (fluid via clamp) */
+  --text-xs: clamp(0.694rem, 0.66rem + 0.17vw, 0.8rem);
+  --text-sm: clamp(0.833rem, 0.78rem + 0.27vw, 1rem);
+  --text-base: clamp(1rem, 0.93rem + 0.36vw, 1.25rem);
+  --text-lg: clamp(1.2rem, 1.1rem + 0.5vw, 1.563rem);
+  --text-xl: clamp(1.44rem, 1.3rem + 0.7vw, 1.953rem);
+  --text-2xl: clamp(1.728rem, 1.53rem + 0.99vw, 2.441rem);
+  --text-3xl: clamp(2.074rem, 1.79rem + 1.42vw, 3.052rem);
+  --text-4xl: clamp(2.488rem, 2.09rem + 1.99vw, 3.815rem);
+  --text-5xl: clamp(3rem, 2.5rem + 2.5vw, 5rem);
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Grid */
+  --grid-columns: 12;
+  --grid-gutter: clamp(1rem, 2vw, 2rem);
+  --container-max: 1400px;
+  /* Narrower measure for long-form reading (event detail body) */
+  --container-narrow: 900px;
+
+  /* Base theme colors — CCA warm palette */
+  --color-bg: #FDFAF5;
+  --color-text: #1a1a1a;
+  --color-accent: #00BFB3;
+  --color-surface: #F5F0E5;
+  --color-border: #DDD7CA;
+  --color-text-muted: color-mix(in srgb, var(--color-text) 70%, transparent);
+  /* Ink for text/icons sitting ON an --color-accent fill. The accents are light
+     mid-tones, so white on accent fails WCAG AA — this must stay dark. */
+  --color-on-accent: #1a1a1a;
+  /* Ink for --gradient-hero / --gradient-prismatic, which are dark in every
+     theme. Not derived from --color-text, which flips with the theme. */
+  --color-on-dark: #f5f0e8;
+  --color-header-logo: var(--color-text);
+
+  /* RGB channels + semantic overlays */
+  --color-bg-rgb: 253, 250, 245;
+  --color-accent-rgb: 0, 191, 179;
+  --color-header-bg: rgba(var(--color-bg-rgb), 0.85);
+  --color-dropdown-bg: rgba(var(--color-bg-rgb), 0.92);
+  --color-mobile-bg: rgba(var(--color-bg-rgb), 0.95);
+  --color-accent-tint: rgba(var(--color-accent-rgb), 0.15);
+  --color-accent-shadow: rgba(var(--color-accent-rgb), 0.15);
+
+  /* Shimmer tokens */
+  --color-shimmer-base: #FFC845;
+  --color-shimmer-highlight: #fff8e0;
+  --color-shimmer-warm: #E57200;
+
+  /* Scheme hint + radius + shadow */
+  --theme-scheme: light;
+  --radius-card: 6px;
+  --radius-sm: 4px;
+  --shadow-card-rest: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  /* CCA brand palette */
+  --color-teal: #00BFB3;
+  --color-yellow: #FFC845;
+  --color-lime: #B7BF10;
+  --color-pink: #F1BDC8;
+  --color-orange: #E57200;
+  --color-purple: #563D82;
+  --color-navy: #005776;
+  --color-sand: #F7F3E9;
+  --color-dark-teal: #002f40;
+
+  /* Celebration accent spectrum (aliases) */
+  --color-celebration-primary: var(--color-teal);
+  --color-celebration-secondary: var(--color-purple);
+  --color-celebration-warm: var(--color-yellow);
+  --color-celebration-energy: var(--color-orange);
+  --color-celebration-deep: var(--color-navy);
+
+  /* Gradient tokens */
+  --gradient-prismatic: linear-gradient(
+    var(--gradient-angle, 135deg),
+    #00BFB3,
+    #563D82,
+    #E57200
+  );
+  --gradient-hero: linear-gradient(
+    160deg,
+    #005776 0%,
+    #0f0f1a 40%,
+    #563D82 100%
+  );
+  --gradient-gold: linear-gradient(135deg, #FFC845, #E57200);
+
+  /* Default heading styles */
+  --heading-weight: 700;
+  --heading-transform: none;
+  --heading-tracking: -0.01em;
+
+  /* Grid background tokens */
+  --grid-dot-color: var(--color-text);
+  --grid-line-color: var(--color-accent);
+  --grid-opacity: 0.06;
+  --flare-opacity: 0.4;
+
+  /* Motion design tokens */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quint: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+
+  /* Theme gradient (default) */
+  --theme-gradient: linear-gradient(135deg, #00BFB3, #005776);
+}
+
+/* --------------------------------------------------------------------------
+   Commencement — Unified dark navy + teal + gold palette
+   -------------------------------------------------------------------------- */
+[data-theme="commencement"] {
+  --theme-scheme: dark;
+  --color-bg: #0C2340;
+  --color-text: #f5f0e8;
+  --color-accent: #3DD6C9;
+  --color-surface: #122D4D;
+  --color-border: #1E3A5F;
+  --color-text-muted: color-mix(in srgb, var(--color-text) 72%, transparent);
+  --color-on-accent: #0C2340;
+  --color-header-logo: var(--color-text);
+  --color-bg-rgb: 12, 35, 64;
+  --color-accent-rgb: 61, 214, 201;
+  --color-gold: #E8A830;
+  --color-header-bg: rgba(12, 35, 64, 0.88);
+  --color-dropdown-bg: rgba(12, 35, 64, 0.94);
+  --color-mobile-bg: rgba(12, 35, 64, 0.96);
+  --color-accent-tint: rgba(61, 214, 201, 0.15);
+  --color-accent-shadow: rgba(61, 214, 201, 0.20);
+  --color-shimmer-base: #E8A830;
+  --color-shimmer-highlight: #F5D68A;
+  --color-shimmer-warm: #C4891E;
+  --theme-gradient: linear-gradient(135deg, #3DD6C9, #E8A830);
+  --gradient-prismatic: linear-gradient(var(--gradient-angle, 135deg), #3DD6C9, #0C2340, #E8A830);
+  --shadow-card-rest: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.3);
+  --grid-opacity: 0.10;
+  --flare-opacity: 0.5;
+}
+
+/* --------------------------------------------------------------------------
+   Showcase / Graduation Exhibitions
+   Dark navy + lime
+   -------------------------------------------------------------------------- */
+[data-theme="showcase"] {
+  --theme-scheme: dark;
+  --color-bg: #0C2340;
+  --color-text: #f5f0e8;
+  --color-accent: #B7BF10;
+  --color-header-logo: var(--color-teal);
+  --color-surface: #122D4D;
+  --color-border: #1E3A5F;
+  --color-text-muted: color-mix(in srgb, var(--color-text) 72%, transparent);
+  --color-on-accent: #0C2340;
+  --color-bg-rgb: 12, 35, 64;
+  --color-accent-rgb: 183, 191, 16;
+  --color-header-bg: rgba(12, 35, 64, 0.88);
+  --color-dropdown-bg: rgba(12, 35, 64, 0.94);
+  --color-mobile-bg: rgba(12, 35, 64, 0.96);
+  --color-accent-tint: rgba(183, 191, 16, 0.15);
+  --color-accent-shadow: rgba(183, 191, 16, 0.20);
+  --color-shimmer-base: #B7BF10;
+  --color-shimmer-highlight: #D4DB5E;
+  --color-shimmer-warm: #9AA00D;
+  --radius-card: 6px;
+  --radius-sm: 4px;
+  --shadow-card-rest: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.3);
+  --theme-gradient: linear-gradient(135deg, #B7BF10, #D4DB5E);
+  --gradient-prismatic: linear-gradient(var(--gradient-angle, 135deg), #B7BF10, #0C2340, #3DD6C9);
+  --grid-opacity: 0.10;
+  --flare-opacity: 0.5;
+}
+
+/* --------------------------------------------------------------------------
+   Theme Extension Guide
+
+   To add a new theme, define a [data-theme="your-theme"] block with:
+
+   REQUIRED TOKENS:
+   - Core palette: --color-bg, --color-text, --color-accent, --color-surface,
+     --color-border
+   - Derived text: --color-text-muted (color-mix of --color-text at ~70%)
+   - Contrast pair: --color-on-accent — ink placed on an --color-accent fill.
+     Check it against the accent at 4.5:1; every CCA accent so far is a light
+     mid-tone, so this is dark ink, NOT white.
+   - Header: --color-header-logo
+   - RGB channels: --color-bg-rgb (R, G, B), --color-accent-rgb (R, G, B)
+   - Overlays: --color-header-bg, --color-dropdown-bg, --color-mobile-bg
+     (use rgba with --color-bg-rgb at 0.85/0.92/0.95 for light, 0.88/0.94/0.96 for dark)
+   - Tints: --color-accent-tint, --color-accent-shadow
+   - Gradients: --theme-gradient, optionally override --gradient-prismatic
+   - Shimmer: --color-shimmer-base, --color-shimmer-highlight, --color-shimmer-warm
+   - Scheme: --theme-scheme (light | dark)
+   - Layout: --radius-card (6px), --radius-sm (4px)
+   - Elevation: --shadow-card-rest, --shadow-card-hover
+     (dark themes use higher opacity shadows)
+   -------------------------------------------------------------------------- */

@@ -1,17 +1,85 @@
 ---
+import Layout from '../layouts/Layout.astro'
+import EventCard from '../components/EventCard.astro'
+import { fetchEvents } from '../lib/api'
 
+// Already filtered to published and sorted by startDate by the CMS query.
+const events = await fetchEvents()
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="2027 CCA Commencement">
+  <section class="hero">
+    <div class="container">
+      <p class="section-label">California College of the Arts</p>
+      <h1 class="hero__title">
+        <span class="u-display hero__year">2027</span>
+        <span class="hero__words">Commencement</span>
+      </h1>
+      <p class="hero__lede">Celebrating the Class of 2027.</p>
+    </div>
+  </section>
+
+  <section class="events container">
+    <h2 class="events__heading">Upcoming Events</h2>
+
+    {
+      events.length > 0 ? (
+        <div class="grid-cards">
+          {events.map((event, i) => (
+            <EventCard event={event} class:list={['reveal', `stagger-${(i % 8) + 1}`]} />
+          ))}
+        </div>
+      ) : (
+        <p class="events__empty u-muted">No events scheduled yet.</p>
+      )
+    }
+  </section>
+</Layout>
+
+<style>
+  .hero {
+    padding-block: var(--space-20) var(--space-16);
+    background: var(--gradient-hero);
+    border-bottom: 1px solid var(--color-border);
+    /* --gradient-hero is dark in every theme, so the ink here can't come from
+       --color-text (which flips light/dark with the theme). */
+    color: var(--color-on-dark);
+  }
+
+  .hero__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-4);
+    margin-block: var(--space-2) var(--space-4);
+  }
+
+  .hero__year {
+    font-size: var(--text-5xl);
+    line-height: 1;
+    color: var(--color-accent);
+  }
+
+  .hero__words {
+    font-size: var(--text-4xl);
+  }
+
+  .hero__lede {
+    font-size: var(--text-lg);
+    color: color-mix(in srgb, var(--color-on-dark) 80%, transparent);
+  }
+
+  .events {
+    padding-block: var(--space-16);
+  }
+
+  .events__heading {
+    margin-block-end: var(--space-10);
+  }
+
+  .events__empty {
+    padding-block: var(--space-12);
+    font-style: italic;
+    text-align: center;
+  }
+</style>

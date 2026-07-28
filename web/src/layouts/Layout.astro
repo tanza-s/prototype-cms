@@ -1,0 +1,196 @@
+---
+// Cascade order matters: fonts declare the faces, themes define the tokens that
+// global/grid/animations consume.
+import '../styles/fonts.css'
+import '../styles/themes.css'
+import '../styles/global.css'
+import '../styles/grid.css'
+import '../styles/animations.css'
+
+interface Props {
+  title: string
+  description?: string
+  /** Matches a [data-theme] block in styles/themes.css. */
+  theme?: 'commencement' | 'showcase'
+  /** Hide the shared page header (e.g. for a full-bleed hero). */
+  bareHeader?: boolean
+}
+
+const {
+  title,
+  description = 'Celebrating the Class of 2027 at California College of the Arts.',
+  theme = 'commencement',
+  bareHeader = false,
+} = Astro.props
+
+// Only the faces in the initial render path. Preloading all ten would compete
+// with the HTML and CSS for bandwidth and cost more than it saves.
+const preloadFonts = [
+  '/fonts/lineto-brown-regular.woff2',
+  '/fonts/merriweather-regular-webfont.woff2',
+  '/fonts/merriweather-bold-webfont.woff2',
+]
+---
+
+<html lang="en" data-theme={theme}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+
+    {
+      preloadFonts.map((href) => (
+        <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
+      ))
+    }
+  </head>
+
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+
+    {
+      !bareHeader && (
+        <header class="site-header">
+          <div class="container site-header__inner">
+            <a href="/" class="site-header__logo">
+              <span class="u-display site-header__year">2027</span>
+              <span class="site-header__wordmark">CCA Commencement</span>
+            </a>
+          </div>
+        </header>
+      )
+    }
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p class="site-footer__text">
+          &copy; <span class="u-mono">2027</span> California College of the Arts. All rights
+          reserved.
+        </p>
+      </div>
+    </footer>
+
+    <script is:inline>
+      // Mark JS as available so global.css can stop neutralizing .reveal.
+      document.documentElement.classList.add('js')
+      ;(function () {
+        var targets = document.querySelectorAll(
+          '.reveal, .reveal-scale, .reveal-left, .reveal-right, .reveal-clip',
+        )
+        if (!targets.length) return
+
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (reduced || !('IntersectionObserver' in window)) {
+          // animations.css already flattens the transitions under reduced
+          // motion; just make sure everything ends up visible.
+          targets.forEach(function (el) {
+            el.classList.add('is-visible')
+          })
+          return
+        }
+
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return
+              entry.target.classList.add('is-visible')
+              observer.unobserve(entry.target)
+            })
+          },
+          { rootMargin: '0px 0px -10% 0px', threshold: 0.1 },
+        )
+
+        targets.forEach(function (el) {
+          observer.observe(el)
+        })
+      })()
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: absolute;
+    top: var(--space-2);
+    left: var(--space-2);
+    z-index: 100;
+    padding: var(--space-2) var(--space-4);
+    color: var(--color-on-accent);
+    background-color: var(--color-accent);
+    border-radius: var(--radius-sm);
+    transform: translateY(-200%);
+    transition: transform var(--duration-fast) var(--ease-out-expo);
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
+  }
+
+  /* ---------------------------------------------------------------- header */
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding-block: var(--space-4);
+    background-color: var(--color-header-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .site-header__logo {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    color: var(--color-header-logo);
+    background-image: none; /* opt out of the animated link underline */
+  }
+
+  .site-header__year {
+    font-size: var(--text-2xl);
+    line-height: 1;
+    color: var(--color-accent);
+  }
+
+  .site-header__wordmark {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ---------------------------------------------------------------- footer */
+
+  .site-footer {
+    margin-block-start: var(--space-24);
+    padding-block: var(--space-12);
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+  }
+
+  .site-footer__text {
+    max-width: none;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+</style>
