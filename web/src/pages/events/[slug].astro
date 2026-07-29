@@ -1,73 +1,119 @@
 ---
-import type { Event } from '../../types/payload'
-import Layout from '../../layouts/Layout.astro'
-import { fetchEvents } from '../../lib/api'
-import { formatEventRangeLong, toDateTimeAttr } from '../../lib/dates'
-import { truncateAtWord } from '../../lib/richtext'
+import type { Event } from "../../types/payload";
+import Layout from "../../layouts/Layout.astro";
+import { fetchEvents } from "../../lib/api";
+import { formatEventScheduleParts, toDateTimeAttr } from "../../lib/dates";
+import { truncateAtWord } from "../../lib/richtext";
 
+/**
+ * Static in production, on-demand in dev.
+ *
+ * Production keeps plain HTML on disk: no server to run, and a CMS outage can't
+ * take the public site down. But that also means the route table is fixed at
+ * build time, so an event published afterwards 404s until the next build —
+ * which, while authoring, means every new event 404s until the dev server is
+ * restarted.
+ *
+ * Rendering on demand in dev only removes that entirely: each request re-queries
+ * Payload, so a newly published event is live on refresh. No adapter is needed,
+ * because the production build still prerenders.
+ */
+export const prerender = import.meta.env.PROD;
+
+// Only consulted when prerendering; on-demand routes get their params from the
+// URL instead, and Astro ignores this.
 export async function getStaticPaths() {
-  const events = await fetchEvents()
+  const events = await fetchEvents();
   return events.map((event) => ({
     params: { slug: event.slug },
     // Pass the event through so the page doesn't refetch the whole collection.
     props: { event },
-  }))
+  }));
 }
 
 interface Props {
-  event: Event
+  /** Supplied by getStaticPaths when prerendering; absent when on-demand. */
+  event?: Event;
 }
 
-const { event } = Astro.props
+// Prerendered builds get the event as a prop. Rendering on demand there are no
+// props, so look it up by the slug in the URL.
+let event = Astro.props.event;
+if (!event) {
+  const events = await fetchEvents();
+  event = events.find((candidate) => candidate.slug === Astro.params.slug);
+}
+if (!event) {
+  return new Response(null, { status: 404, statusText: "Event not found" });
+}
 
-const dateRange = formatEventRangeLong(event.startDate, event.endDate)
+// Kept as parts rather than one string so the hours can sit on their own line.
+// `long` gives the detail page the fuller wording ("Saturday, May 1, 2027").
+const schedule = formatEventScheduleParts(event, true);
 const metaDescription = event.excerpt
   ? truncateAtWord(event.excerpt, 155)
-  : `${event.title} — 2027 CCA Commencement`
+  : `${event.title} — 2027 CCA Commencement`;
 ---
 
-<Layout title={`${event.title} - 2027 CCA Commencement`} description={metaDescription}>
+<Layout
+  title={`${event.title} - 2027 CCA Commencement`}
+  description={metaDescription}
+>
   <article class="event">
-    {
-      event.image && (
-        <div class="event__hero">
-          <img src={event.image.url} alt={event.image.alt} />
-        </div>
-      )
-    }
-
     <div class="container-narrow event__body">
       <a href="/" class="event__back">&larr; All events</a>
 
       <p class="section-label">Commencement Event</p>
       <h1 class="event__title">{event.title}</h1>
+      <div
+        class:list={[
+          "event__content",
+          `event__content--${event.imageOrientation}`,
+        ]}
+      >
+        {
+          event.image && (
+            <div
+              class:list={[
+                "event__hero",
+                `event__hero--${event.imageOrientation}`,
+              ]}
+            >
+              <img src={event.image.url} alt={event.image.alt} />
+            </div>
+          )
+        }
 
-      <dl class="event__meta">
-        <div class="event__meta-item">
-          <dt>Date &amp; Time</dt>
-          <dd>
-            <time class="u-mono" datetime={toDateTimeAttr(event.startDate)}>{dateRange}</time>
-          </dd>
-        </div>
+        <dl class="event__meta">
+          <div class="event__meta-item">
+            <dt>Date &amp; Time</dt>
+            <dd>
+              <time class="u-mono event__schedule" datetime={toDateTimeAttr(event)}>
+                <span class="event__schedule-date">{schedule.date}</span>
+                {schedule.time && <span class="event__schedule-time">{schedule.time}</span>}
+              </time>
+            </dd>
+          </div>
 
-        <div class="event__meta-item">
-          <dt>Location</dt>
-          <dd>{event.location}</dd>
-        </div>
-      </dl>
+          <div class="event__meta-item">
+            <dt>Location</dt>
+            <dd>{event.location}</dd>
+          </div>
 
-      {
-        event.rsvpLink && (
-          <a
-            href={event.rsvpLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="button event__rsvp"
-          >
-            RSVP Now
-          </a>
-        )
-      }
+          {
+            event.rsvpLink && (
+              <a
+                href={event.rsvpLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="button event__rsvp"
+              >
+                RSVP Now
+              </a>
+            )
+          }
+        </dl>
+      </div>
 
       <hr class="section-divider" />
 
@@ -82,16 +128,53 @@ const metaDescription = event.excerpt
   }
 
   .event__hero {
-    aspect-ratio: 21 / 9;
-    max-height: 520px;
-    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    --hero-max-height: 520px;
+  }
+
+  .event__hero--landscape {
     border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-8);
+    margin-bottom: var(--space-8);
+  }
+
+  .event__hero--portrait {
+    --hero-max-height: 720px;
   }
 
   .event__hero img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: var(--hero-max-height);
+    margin-inline: auto;
+  }
+
+  .event__content {
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  /* A portrait poster leaves a tall empty gutter beside it, so the meta moves up
+     into that space. Landscape art already fills the width, and keeps the
+     stacked layout. Below 768px both orientations stack — there's no room to put
+     anything beside the image. */
+  @media (min-width: 768px) {
+    .event__content--portrait {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 2fr);
+      align-items: start;
+      gap: var(--space-10);
+    }
+
+    /* .event__meta's auto-fit would still try to sit Date and Location side by
+       side; in the narrower side column they should read as one per row. */
+    .event__content--portrait .event__meta {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
   }
 
   .event__body {
@@ -135,7 +218,24 @@ const metaDescription = event.excerpt
     color: var(--color-text);
   }
 
+  /* Date on one line, hours on the next. Grid rather than block spans so the two
+     lines share one gap value and the <time> element still reads as a single
+     unit to assistive tech. */
+  .event__schedule {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .event__schedule-time {
+    color: var(--color-text-muted);
+  }
+
+  /* The button is a direct child of .event__meta's grid, and grid items stretch
+     to fill their track by default — which is what was making it tall. Pinning
+     both axes to `start` lets it size to its own content instead. */
   .event__rsvp {
+    align-self: start;
+    justify-self: start;
     margin-block-start: var(--space-8);
   }
 

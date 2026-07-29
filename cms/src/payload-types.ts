@@ -189,11 +189,34 @@ export interface Event {
     };
     [k: string]: unknown;
   };
-  image: number | Media;
+  /**
+   * Optional. Events without art still render, in a text-only tile.
+   */
+  image?: (number | null) | Media;
+  imageOrientation: 'landscape' | 'portrait';
   startDate: string;
-  endDate: string;
+  /**
+   * Leave blank for a single-day event.
+   */
+  endDate?: string | null;
+  /**
+   * Runs all day, with no specific start or end time.
+   */
+  allDay?: boolean | null;
+  /**
+   * For a multi-day event, the daily opening time.
+   */
+  startTime?: string | null;
+  /**
+   * For a multi-day event, the daily closing time.
+   */
+  endTime?: string | null;
   location: string;
   rsvpLink?: string | null;
+  /**
+   * Auto sizes the tile from the event’s own content. Override only for marquee events.
+   */
+  bentoSize?: ('auto' | 'feature' | 'standard') | null;
   /**
    * Check to make this event visible on the site
    */
@@ -328,10 +351,15 @@ export interface EventsSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   image?: T;
+  imageOrientation?: T;
   startDate?: T;
   endDate?: T;
+  allDay?: T;
+  startTime?: T;
+  endTime?: T;
   location?: T;
   rsvpLink?: T;
+  bentoSize?: T;
   published?: T;
   updatedAt?: T;
   createdAt?: T;

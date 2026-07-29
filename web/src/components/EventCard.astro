@@ -1,21 +1,31 @@
 ---
 import type { Event } from '../types/payload'
-import { formatEventRangeShort, toDateTimeAttr } from '../lib/dates'
+import { formatEventSchedule, toDateTimeAttr } from '../lib/dates'
 
 interface Props {
   event: Event
+  /**
+   * Number of columns the card is sitting in. At 1 the card goes horizontal —
+   * image alongside the content — since it has the full width to work with.
+   * At 2+ it stacks to fit a narrower column.
+   */
+  columns?: number
   /** Forwarded from the parent so reveal/stagger classes land on the root. */
   class?: string
 }
 
-const { event, class: className } = Astro.props
+const { event, columns = 1, class: className } = Astro.props
 
-const dateRange = formatEventRangeShort(event.startDate, event.endDate)
+const dateRange = formatEventSchedule(event)
 ---
 
 <a
   href={`/events/${event.slug}`}
-  class:list={['event-card', className]}
+  class:list={[
+    'event-card',
+    { 'event-card--horizontal': columns === 1, 'event-card--no-image': !event.image },
+    className,
+  ]}
 >
   {
     event.image && (
@@ -31,7 +41,7 @@ const dateRange = formatEventRangeShort(event.startDate, event.endDate)
     <dl class="event-card__meta">
       <dt class="sr-only">Date</dt>
       <dd>
-        <time class="u-mono event-card__date" datetime={toDateTimeAttr(event.startDate)}>
+        <time class="u-mono event-card__date" datetime={toDateTimeAttr(event)}>
           {dateRange}
         </time>
       </dd>
@@ -72,6 +82,37 @@ const dateRange = formatEventRangeShort(event.startDate, event.endDate)
     aspect-ratio: 3 / 2;
     overflow: hidden;
     border-bottom: 1px solid var(--color-border);
+  }
+
+  /* --------------------------------------------------- horizontal (columns=1)
+     Below 768px there isn't room to sit side by side, so it stays stacked. */
+  @media (min-width: 768px) {
+    .event-card--horizontal {
+      display: grid;
+      grid-template-columns: minmax(0, 320px) 1fr;
+      align-items: stretch;
+    }
+
+    /* Without an image the content must span the full card rather than being
+       trapped in the 320px column. */
+    .event-card--horizontal.event-card--no-image {
+      grid-template-columns: 1fr;
+    }
+
+    .event-card--horizontal .event-card__image {
+      aspect-ratio: auto;
+      height: 100%;
+      border-bottom: 0;
+      border-inline-end: 1px solid var(--color-border);
+    }
+
+    .event-card--horizontal .event-card__content {
+      padding: var(--space-8);
+    }
+
+    .event-card--horizontal .event-card__title {
+      font-size: var(--text-xl);
+    }
   }
 
   .event-card__image img {

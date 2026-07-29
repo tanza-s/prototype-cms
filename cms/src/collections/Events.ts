@@ -65,29 +65,102 @@ export const Events: CollectionConfig = {
       name: 'image',
       type: 'upload',
       relationTo: 'media',
-      required: true,
       label: 'Event Image',
+      admin: {
+        description: 'Optional. Events without art still render, in a text-only tile.',
+      },
     },
+    {
+      name: 'imageOrientation',
+      type: 'select',
+      required: true,
+      defaultValue: 'landscape',
+      label: 'Image Orientation',
+      options: [
+        { label: 'Landscape', value: 'landscape' },
+        { label: 'Portrait', value: 'portrait' },
+      ],
+    },
+    /**
+     * Dates and times are deliberately separate fields.
+     *
+     * A day-only value has no meaningful time-of-day, and a multi-day event's
+     * "viewing hours" apply to every day in the run rather than describing one
+     * continuous span — "May 1–13, open 12–3pm" is two dates and one daily time
+     * range, which a pair of dayAndTime instants cannot express.
+     *
+     * Day fields are stored at UTC midnight and must be READ IN UTC. The time
+     * fields are wall-clock values stored as an instant and must be read in the
+     * site's timezone. See web/src/lib/api.ts, which does both conversions once
+     * so nothing downstream has to think about it.
+     */
     {
       name: 'startDate',
       type: 'date',
       required: true,
-      label: 'Start Date & Time',
+      label: 'Start Date',
       admin: {
         date: {
-          pickerAppearance: 'dayAndTime',
+          pickerAppearance: 'dayOnly',
+          displayFormat: 'MMM d, yyyy',
         },
       },
     },
     {
       name: 'endDate',
       type: 'date',
-      required: true,
-      label: 'End Date & Time',
+      label: 'End Date',
       admin: {
         date: {
-          pickerAppearance: 'dayAndTime',
+          pickerAppearance: 'dayOnly',
+          displayFormat: 'MMM d, yyyy',
         },
+        description: 'Leave blank for a single-day event.',
+      },
+      validate: (value: unknown, { data }: { data: Partial<{ startDate: string }> }) => {
+        if (!value || !data?.startDate) return true
+        // Compare the stored instants directly; both are day-only so the
+        // comparison is unambiguous without any timezone conversion.
+        return new Date(value as string) >= new Date(data.startDate)
+          ? true
+          : 'End date cannot be before the start date.'
+      },
+    },
+    {
+      name: 'allDay',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'All day',
+      admin: {
+        description: 'Runs all day, with no specific start or end time.',
+      },
+    },
+    {
+      name: 'startTime',
+      type: 'date',
+      label: 'Start Time',
+      admin: {
+        date: {
+          pickerAppearance: 'timeOnly',
+          displayFormat: 'h:mm a',
+        },
+        // Hiding these when All day is ticked makes the contradictory
+        // "all day, but also 12–3pm" state unrepresentable.
+        condition: (data) => !data?.allDay,
+        description: 'For a multi-day event, the daily opening time.',
+      },
+    },
+    {
+      name: 'endTime',
+      type: 'date',
+      label: 'End Time',
+      admin: {
+        date: {
+          pickerAppearance: 'timeOnly',
+          displayFormat: 'h:mm a',
+        },
+        condition: (data) => !data?.allDay,
+        description: 'For a multi-day event, the daily closing time.',
       },
     },
     {
@@ -102,6 +175,21 @@ export const Events: CollectionConfig = {
       label: 'RSVP Link',
       admin: {
         placeholder: 'https://example.com/rsvp',
+      },
+    },
+    {
+      name: 'bentoSize',
+      type: 'select',
+      defaultValue: 'auto',
+      label: 'Grid Emphasis',
+      options: [
+        { label: 'Auto', value: 'auto' },
+        { label: 'Feature (large tile)', value: 'feature' },
+        { label: 'Standard (small tile)', value: 'standard' },
+      ],
+      admin: {
+        description:
+          'Auto sizes the tile from the event’s own content. Override only for marquee events.',
       },
     },
     {
