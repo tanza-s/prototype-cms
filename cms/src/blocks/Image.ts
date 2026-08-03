@@ -23,6 +23,16 @@ export const Image: Block = {
       type: 'text',
     },
     {
+      name: 'linkUrl',
+      type: 'text',
+      label: 'Link URL',
+      admin: {
+        placeholder: 'https://example.com or /about',
+        description:
+          'Optional. Makes the image clickable. When set, the alt text becomes the link’s name, so write it to say where the link goes rather than what the picture shows.',
+      },
+    },
+    {
       name: 'size',
       type: 'select',
       defaultValue: 'contained',

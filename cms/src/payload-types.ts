@@ -319,6 +319,10 @@ export interface ImageBlock {
    */
   altText?: string | null;
   caption?: string | null;
+  /**
+   * Optional. Makes the image clickable. When set, the alt text becomes the link’s name, so write it to say where the link goes rather than what the picture shows.
+   */
+  linkUrl?: string | null;
   size: 'contained' | 'wide' | 'full';
   id?: string | null;
   blockName?: string | null;
@@ -335,6 +339,10 @@ export interface MediaWithContentBlock {
    */
   altText?: string | null;
   caption?: string | null;
+  /**
+   * Optional. Makes the media clickable. Separate from the links below — use this when the image itself is the destination, and those when you want visible buttons.
+   */
+  linkUrl?: string | null;
   content: {
     root: {
       type: string;
@@ -378,7 +386,7 @@ export interface CallToActionBlock {
    */
   url: string;
   image?: (number | null) | Media;
-  style: 'basic' | 'featured';
+  style: 'basic' | 'featured' | 'image';
   id?: string | null;
   blockName?: string | null;
   blockType: 'callToAction';
@@ -584,6 +592,7 @@ export interface ImageBlockSelect<T extends boolean = true> {
   image?: T;
   altText?: T;
   caption?: T;
+  linkUrl?: T;
   size?: T;
   id?: T;
   blockName?: T;
@@ -596,6 +605,7 @@ export interface MediaWithContentBlockSelect<T extends boolean = true> {
   media?: T;
   altText?: T;
   caption?: T;
+  linkUrl?: T;
   content?: T;
   callToAction?:
     | T

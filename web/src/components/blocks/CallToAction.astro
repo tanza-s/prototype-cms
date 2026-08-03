@@ -1,0 +1,95 @@
+---
+// A prompt and a single link, in one of three presets.
+//
+// The image is decorative here rather than a Figure: it has no caption, and linking
+// it would give the block two links to the same destination, which a screen reader
+// announces as two separate ones.
+
+import type { CallToActionBlock } from '../../types/payload'
+
+interface Props {
+  block: CallToActionBlock
+  /** Forwarded from the parent so reveal/stagger classes land on the root. */
+  class?: string
+}
+
+const { block, class: className } = Astro.props
+
+const showsImage = block.style === 'image' && Boolean(block.image)
+const isExternal = /^https?:\/\//i.test(block.url)
+---
+
+<section class:list={['cta-block', `cta-block--${block.style}`, className]}>
+  {
+    showsImage && block.image && (
+      <div class="cta-block__image">
+        <img src={block.image.url} alt={block.image.alt} loading="lazy" />
+      </div>
+    )
+  }
+
+  <div class="cta-block__body">
+    {block.title && <h2 class="cta-block__title">{block.title}</h2>}
+    {block.description && <p class="cta-block__description">{block.description}</p>}
+
+    {/* url is '' when safeHref rejected it — that would be a link to nowhere. */}
+    {
+      block.url && block.label && (
+        <a
+          class:list={['button', { 'button--ghost': block.style === 'basic' }]}
+          href={block.url}
+          rel={isExternal ? 'noopener noreferrer' : undefined}
+        >
+          {block.label}
+        </a>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .cta-block {
+    max-width: var(--container-narrow);
+    margin-inline: auto;
+    padding-block: var(--space-12);
+    padding-inline: var(--grid-gutter);
+  }
+
+  .cta-block__title {
+    margin: 0;
+  }
+
+  .cta-block__description {
+    margin-block: var(--space-4) var(--space-6);
+    color: var(--color-text-muted);
+  }
+
+  .cta-block__image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-card);
+  }
+
+  /* Featured earns a panel; basic stays inline with the surrounding page. */
+  .cta-block--featured .cta-block__body {
+    padding: var(--space-8);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background-color: color-mix(in srgb, var(--color-text) 4%, transparent);
+  }
+
+  .cta-block--image {
+    display: grid;
+    gap: var(--space-6);
+    max-width: var(--container-max);
+  }
+
+  @media (min-width: 768px) {
+    .cta-block--image {
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: var(--space-10);
+    }
+  }
+</style>

@@ -1,0 +1,61 @@
+---
+import type { Page } from "../types/payload";
+import Layout from "../layouts/Layout.astro";
+import { fetchPages } from "../lib/pages";
+import BlockRenderer from "../components/blocks/BlockRenderer.astro";
+
+
+/**
+ * Static in production, on-demand in dev.
+ *
+ * Production keeps plain HTML on disk: no server to run, and a CMS outage can't
+ * take the public site down. But that also means the route table is fixed at
+ * build time, so an event published afterwards 404s until the next build —
+ * which, while authoring, means every new event 404s until the dev server is
+ * restarted.
+ *
+ * Rendering on demand in dev only removes that entirely: each request re-queries
+ * Payload, so a newly published event is live on refresh. No adapter is needed,
+ * because the production build still prerenders.
+ */
+export const prerender = import.meta.env.PROD;
+
+// Only consulted when prerendering; on-demand routes get their params from the
+// URL instead, and Astro ignores this.
+export async function getStaticPaths() {
+  const pages = await fetchPages();
+  return pages.map((page) => ({
+    params: { slug: page.slug },
+    // Pass the page through so the page doesn't refetch the whole collection.
+    props: { page },
+  }));
+}
+
+interface Props {
+  /** Supplied by getStaticPaths when prerendering; absent when on-demand. */
+  page?: Page;
+}
+
+// Prerendered builds get the page as a prop. Rendering on demand there are no
+// props, so look it up by the slug in the URL.
+let page = Astro.props.page;
+if (!page) {
+  const pages = await fetchPages();
+  page = pages.find((candidate) => candidate.slug === Astro.params.slug);
+}
+if (!page) {
+  return new Response(null, { status: 404, statusText: "Page not found" });
+}
+// Unlike events, no truncation is needed here: lib/pages.ts already resolves
+// meta.description, falling back to the first prose block and cutting it on a word
+// boundary. The remaining fallback is for a page built entirely from images.
+const metaDescription =
+  page.meta.description || `${page.title} — 2027 CCA Commencement`;
+---
+
+<Layout
+  title={`${page.meta.title} - 2027 CCA Commencement`}
+  description={metaDescription}
+>
+  <BlockRenderer blocks={page.layout} />
+</Layout>

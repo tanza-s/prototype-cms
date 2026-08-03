@@ -23,6 +23,16 @@ export const MediaWithContent: Block = {
       type: 'text',
     },
     {
+      name: 'linkUrl',
+      type: 'text',
+      label: 'Link URL',
+      admin: {
+        placeholder: 'https://example.com or /about',
+        description:
+          'Optional. Makes the media clickable. Separate from the links below — use this when the image itself is the destination, and those when you want visible buttons.',
+      },
+    },
+    {
       name: 'content',
       type: 'richText',
       required: true,

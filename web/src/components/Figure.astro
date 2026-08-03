@@ -1,0 +1,81 @@
+---
+// A content image: optional caption, optional link.
+//
+// Only the <img> goes inside the anchor, never the <figcaption>. Wrapping the whole
+// figure would fold the caption into the link's accessible name, so a screen reader
+// would announce the alt text and the caption as one run-on link. Keeping that rule
+// here means it holds everywhere an image appears, rather than in each block.
+//
+// Like Prose, it has no opinion about width or position. Callers tune the two things
+// that do vary through custom properties, which cross Astro's style scoping where a
+// plain descendant selector would not.
+
+import type { MediaImage } from '../types/payload'
+
+interface Props {
+  image: MediaImage
+  caption?: string | null
+  /** Wraps the image in a link. Already scheme-checked by safeHref in lib/pages.ts. */
+  linkUrl?: string | null
+  /** Above-the-fold images shouldn't lazy-load; they're what the visitor came for. */
+  loading?: 'lazy' | 'eager'
+  class?: string
+}
+
+const {
+  image,
+  caption = null,
+  linkUrl = null,
+  loading = 'lazy',
+  class: className,
+} = Astro.props
+
+// Only matters for links leaving the site. safeHref has already guaranteed this is
+// an absolute http(s) URL or a site-relative path, so the test is just origin.
+const isExternal = /^https?:\/\//i.test(linkUrl ?? '')
+---
+
+<figure class:list={['figure', className]}>
+  {
+    linkUrl ? (
+      <a
+        class="figure__link"
+        href={linkUrl}
+        rel={isExternal ? 'noopener noreferrer' : undefined}
+      >
+        <img src={image.url} alt={image.alt} loading={loading} />
+      </a>
+    ) : (
+      <img src={image.url} alt={image.alt} loading={loading} />
+    )
+  }
+
+  {caption && <figcaption class="figure__caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .figure {
+    margin: 0; /* the UA stylesheet indents figures by 40px */
+  }
+
+  .figure img {
+    display: block; /* drop the inline-baseline gap under the image */
+    width: 100%;
+    height: auto;
+    /* Overridable because a full-bleed image shouldn't have rounded corners. */
+    border-radius: var(--figure-radius, var(--radius-card));
+  }
+
+  .figure__link {
+    display: block;
+    background-image: none; /* opt out of the animated link underline */
+  }
+
+  .figure__caption {
+    /* A bleeding image drops its gutter, so its caption re-adds one for itself. */
+    padding-inline: var(--figure-caption-inset, 0);
+    margin-block-start: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+</style>

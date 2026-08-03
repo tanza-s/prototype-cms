@@ -6,6 +6,7 @@ import '../styles/themes.css'
 import '../styles/global.css'
 import '../styles/grid.css'
 import '../styles/animations.css'
+import { fetchPages } from '../lib/pages'
 
 interface Props {
   title: string
@@ -22,6 +23,21 @@ const {
   theme = 'commencement',
   bareHeader = false,
 } = Astro.props
+
+/**
+ * Every published CMS page becomes a nav item, so a new page is reachable the moment
+ * it's published without anyone editing this file. The cost is one Payload request
+ * per rendered page — negligible at build time, and fetchPages already degrades to []
+ * if the CMS is down, so the header just loses its links rather than failing.
+ *
+ * When the site outgrows "every page in the nav", this is the line to replace with a
+ * curated list or a Payload global.
+ */
+const navPages = await fetchPages()
+
+// Built output is /legacy/index.html, which servers may present as either /legacy or
+// /legacy/ — strip the trailing slash so the active-page test works under both.
+const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/'
 
 // Only the faces in the initial render path. Preloading all ten would compete
 // with the HTML and CSS for bandwidth and cost more than it saves.
@@ -64,6 +80,28 @@ const preloadFonts = [
               <span class="u-display site-header__year">2027</span>
               <span class="site-header__wordmark">CCA Commencement</span>
             </a>
+
+            {
+              navPages.length > 0 && (
+                <nav class="site-nav" aria-label="Main">
+                  <ul class="site-nav__list">
+                    {navPages.map((navPage) => (
+                      <li>
+                        <a
+                          href={`/${navPage.slug}`}
+                          class="site-nav__link"
+                          aria-current={
+                            currentPath === `/${navPage.slug}` ? 'page' : undefined
+                          }
+                        >
+                          {navPage.title}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              )
+            }
           </div>
         </header>
       )
@@ -176,6 +214,31 @@ const preloadFonts = [
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+
+  .site-nav__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-3) var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-nav__link {
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-header-logo);
+  }
+
+  /* The current page is not a destination, so mark it rather than inviting a click. */
+  .site-nav__link[aria-current='page'] {
+    color: var(--color-accent);
+    background-image: none;
   }
 
   /* ---------------------------------------------------------------- footer */

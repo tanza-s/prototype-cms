@@ -40,8 +40,11 @@ export function escapeHtml(value: string): string {
 /**
  * Only allow schemes that are safe to put in an href, so CMS content can't
  * smuggle in `javascript:` or a data URL.
+ *
+ * Exported because block link fields are editor-supplied URLs headed for an href
+ * too — they need the same check the links inside rich text already get.
  */
-function safeHref(url: unknown): string | null {
+export function safeHref(url: unknown): string | null {
   if (typeof url !== 'string') return null
   const trimmed = url.trim()
   if (!trimmed) return null

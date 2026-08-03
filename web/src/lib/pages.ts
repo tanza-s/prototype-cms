@@ -23,7 +23,7 @@ import type {
   PageLink,
 } from '../types/payload'
 import { fetchAll, mapImage, slugify, type MediaResponse } from './cms'
-import { lexicalToHtml, lexicalToPlainText, truncateAtWord } from './richtext'
+import { lexicalToHtml, lexicalToPlainText, safeHref, truncateAtWord } from './richtext'
 
 /** Long enough to be useful in search results, short enough not to be truncated. */
 const META_DESCRIPTION_MAX = 160
@@ -56,6 +56,7 @@ interface ImageResponse {
   image?: UploadResponse
   altText?: string | null
   caption?: string | null
+  linkUrl?: string | null
   size?: string | null
 }
 
@@ -64,6 +65,7 @@ interface MediaWithContentResponse {
   media?: UploadResponse
   altText?: string | null
   caption?: string | null
+  linkUrl?: string | null
   content?: unknown
   callToAction?: LinkResponse[] | null
   imageAlignment?: string | null
@@ -115,7 +117,7 @@ const HERO_STYLES: readonly HeroStyle[] = ['left', 'center', 'full']
 const CONTENT_WIDTHS: readonly ContentWidth[] = ['narrow', 'wide', 'full']
 const IMAGE_SIZES: readonly ImageSize[] = ['contained', 'wide', 'full']
 const MEDIA_ALIGNMENTS: readonly MediaAlignment[] = ['left', 'right']
-const CTA_STYLES: readonly CallToActionStyle[] = ['basic', 'featured']
+const CTA_STYLES: readonly CallToActionStyle[] = ['basic', 'featured', 'image']
 
 /**
  * Collapse absent, null, and whitespace-only strings into one representation, so a
@@ -125,13 +127,18 @@ function text(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
-/** Drop half-filled rows: a link with no label or no destination can't be rendered. */
+/**
+ * Drop half-filled rows: a link with no label or no usable destination can't be
+ * rendered. safeHref rejects anything that isn't http(s)/mailto/tel or a relative
+ * path, so an editor can't put `javascript:` into an href — the same check the links
+ * inside rich text already get.
+ */
 function mapLinks(links: LinkResponse[] | null | undefined): PageLink[] {
   if (!Array.isArray(links)) return []
 
   return links.reduce<PageLink[]>((acc, link) => {
     const label = text(link?.label)
-    const url = text(link?.url)
+    const url = safeHref(link?.url)
     if (label && url) acc.push({ label, url })
     return acc
   }, [])
@@ -176,6 +183,7 @@ function mapBlock(block: BlockResponse): PageBlock | null {
         blockType: 'image',
         image,
         caption: text(block.caption),
+        linkUrl: safeHref(block.linkUrl),
         size: oneOf(block.size, IMAGE_SIZES, 'contained'),
       }
       return imageBlock
@@ -186,6 +194,7 @@ function mapBlock(block: BlockResponse): PageBlock | null {
         blockType: 'mediaWithContent',
         media: mapImage(block.media, block.altText),
         caption: text(block.caption),
+        linkUrl: safeHref(block.linkUrl),
         content: lexicalToHtml(block.content),
         callToAction: mapLinks(block.callToAction),
         imageAlignment: oneOf(block.imageAlignment, MEDIA_ALIGNMENTS, 'left'),
@@ -199,7 +208,7 @@ function mapBlock(block: BlockResponse): PageBlock | null {
         title: text(block.title),
         description: text(block.description) ?? '',
         label: text(block.label) ?? '',
-        url: text(block.url) ?? '',
+        url: safeHref(block.url) ?? '',
         image: mapImage(block.image),
         style: oneOf(block.style, CTA_STYLES, 'basic'),
       }

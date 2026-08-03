@@ -70,7 +70,11 @@ export function mapImage(
   return { url, alt: altOverride?.trim() || image.alt || '' }
 }
 
-async function fetchPage<T>(
+/**
+ * One page of paginated *results* — not a document from the Pages collection.
+ * Private; callers use fetchAll, which drives the pagination for them.
+ */
+async function fetchResultPage<T>(
   collection: string,
   params: Record<string, string>,
   page: number,
@@ -123,7 +127,7 @@ export async function fetchAll<T>(
       if (page > MAX_PAGES) {
         throw new Error(`Refusing to fetch more than ${MAX_PAGES} pages of ${collection}`)
       }
-      const data = await fetchPage<T>(collection, params, page)
+      const data = await fetchResultPage<T>(collection, params, page)
       docs.push(...data.docs)
       hasNextPage = Boolean(data.hasNextPage)
       page += 1

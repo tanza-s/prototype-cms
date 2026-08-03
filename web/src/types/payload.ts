@@ -125,6 +125,11 @@ export interface ImageBlock {
    */
   image: MediaImage
   caption: string | null
+  /**
+   * Wraps the image in a link when set. Already scheme-checked by safeHref, so an
+   * editor can't smuggle `javascript:` into an href.
+   */
+  linkUrl: string | null
   size: ImageSize
 }
 
@@ -139,6 +144,8 @@ export interface MediaWithContentBlock {
    */
   media: MediaImage | null
   caption: string | null
+  /** Wraps the media in a link when set. Distinct from `callToAction` below. */
+  linkUrl: string | null
   /** HTML. Required in the CMS, so never ''. */
   content: string
   /** Empty array when the editor added no links — never null. */
@@ -147,7 +154,7 @@ export interface MediaWithContentBlock {
   imageAlignment: MediaAlignment
 }
 
-export type CallToActionStyle = 'basic' | 'featured'
+export type CallToActionStyle = 'basic' | 'featured' | 'image'
 
 export interface CallToActionBlock {
   blockType: 'callToAction'

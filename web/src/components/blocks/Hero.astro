@@ -1,0 +1,168 @@
+---
+// The page opener: eyebrow, heading, optional intro, optional image.
+//
+// `style` is a preset, not an alignment axis — 'full' bleeds the image behind the
+// text while 'left'/'center' run it as a banner above. Grouping them in one select
+// means an editor picks a look rather than assembling one from knobs.
+
+import type { HeroBlock } from '../../types/payload'
+import Prose from '../Prose.astro'
+
+interface Props {
+  block: HeroBlock
+  /** Forwarded from the parent so reveal/stagger classes land on the root. */
+  class?: string
+}
+
+const { block, class: className } = Astro.props
+
+const isOverlay = block.style === 'full' && Boolean(block.backgroundImage)
+---
+
+<section
+  class:list={[
+    'hero-block',
+    `hero-block--${block.style}`,
+    { 'hero-block--overlay': isOverlay },
+    className,
+  ]}
+>
+  {
+    block.backgroundImage && (
+      <div class="hero-block__background">
+        {/*
+          A hero image is the first thing on the page, so it must not lazy-load —
+          deferring it delays the largest contentful paint by a round trip.
+        */}
+        <img
+          src={block.backgroundImage.url}
+          alt={block.backgroundImage.alt}
+          loading="eager"
+        />
+      </div>
+    )
+  }
+
+  <div class="hero-block__content">
+    {block.eyebrow && <p class="hero-block__eyebrow">{block.eyebrow}</p>}
+    {block.heading && <h1 class="hero-block__heading">{block.heading}</h1>}
+    {/* set:html via Prose — `intro` is an HTML string, so {intro} would show tags. */}
+    <Prose class="hero-block__intro" html={block.intro} />
+  </div>
+</section>
+
+<style>
+  .hero-block {
+    position: relative;
+    padding-block: var(--space-12);
+  }
+
+  .hero-block__content {
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding-inline: var(--grid-gutter);
+  }
+
+  .hero-block__eyebrow {
+    margin-block-end: var(--space-3);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  .hero-block__heading {
+    margin: 0;
+    max-width: 20ch; /* headlines break badly when they run the full width */
+  }
+
+  /*
+   * :global because .hero-block__intro is a class handed to <Prose>, so the element
+   * carries Prose's style scope, not this file's. Without it the selector compiles
+   * with this component's scope attribute and silently matches nothing. Safe to
+   * globalise because the name is already namespaced to this block.
+   */
+  :global(.hero-block__intro) {
+    margin-block-start: var(--space-5);
+    max-width: var(--container-narrow);
+  }
+
+  /* -------------------------------------------------------------- banner */
+
+  .hero-block__background {
+    max-width: var(--container-max);
+    margin-inline: auto;
+    margin-block-end: var(--space-8);
+    padding-inline: var(--grid-gutter);
+  }
+
+  .hero-block__background img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-card);
+  }
+
+  .hero-block--center .hero-block__content {
+    text-align: center;
+  }
+
+  .hero-block--center .hero-block__heading {
+    margin-inline: auto;
+  }
+
+  .hero-block--center :global(.hero-block__intro) {
+    margin-inline: auto;
+  }
+
+  /* -------------------------------------------------------------- overlay */
+
+  /*
+   * Only 'full' *with* an image overlays. Without one there is nothing to bleed, so
+   * the block falls back to the banner rules above rather than reserving empty height.
+   */
+  .hero-block--overlay {
+    display: grid;
+    padding-block: 0;
+    isolation: isolate;
+  }
+
+  .hero-block--overlay .hero-block__background,
+  .hero-block--overlay .hero-block__content {
+    grid-area: 1 / 1;
+  }
+
+  .hero-block--overlay .hero-block__background {
+    max-width: none;
+    margin: 0;
+    padding-inline: 0;
+  }
+
+  .hero-block--overlay .hero-block__background img {
+    height: 100%;
+    min-height: 50vh;
+    object-fit: cover;
+    border-radius: 0;
+  }
+
+  /* Text over a photograph needs a scrim, or contrast depends on the crop. */
+  .hero-block--overlay .hero-block__background::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      color-mix(in srgb, var(--color-bg) 85%, transparent),
+      transparent
+    );
+  }
+
+  .hero-block--overlay .hero-block__content {
+    z-index: 1;
+    align-self: end;
+    width: 100%;
+    padding-block: var(--space-12);
+  }
+</style>

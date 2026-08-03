@@ -42,6 +42,7 @@ export const CallToAction: Block = {
       options: [
         { label: 'Basic', value: 'basic' },
         { label: 'Featured', value: 'featured' },
+        { label: 'With Image', value: 'image' },
       ],
       required: true,
     },
