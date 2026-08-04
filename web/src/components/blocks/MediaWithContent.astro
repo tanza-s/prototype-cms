@@ -18,6 +18,9 @@ interface Props {
 }
 
 const { block, class: className } = Astro.props
+
+/** Half of the 1400px container above the breakpoint, full width below it. */
+const MEDIA_SIZES = '(min-width: 768px) 700px, 100vw'
 ---
 
 <section
@@ -35,6 +38,7 @@ const { block, class: className } = Astro.props
         image={block.media}
         caption={block.caption}
         linkUrl={block.linkUrl}
+        sizes={MEDIA_SIZES}
       />
     )
   }

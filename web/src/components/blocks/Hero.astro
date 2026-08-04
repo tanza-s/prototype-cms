@@ -36,6 +36,10 @@ const isOverlay = block.style === 'full' && Boolean(block.backgroundImage)
         */}
         <img
           src={block.backgroundImage.url}
+          srcset={block.backgroundImage.srcset || undefined}
+          sizes={block.backgroundImage.srcset ? '100vw' : undefined}
+          width={block.backgroundImage.width ?? undefined}
+          height={block.backgroundImage.height ?? undefined}
           alt={block.backgroundImage.alt}
           loading="eager"
         />

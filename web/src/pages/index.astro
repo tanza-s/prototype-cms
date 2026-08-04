@@ -5,10 +5,10 @@ import EventCard from '../components/EventCard.astro'
 import ViewToggle from '../components/ViewToggle.astro'
 import { fetchEvents } from '../lib/api'
 
-// Static in production, on-demand in dev — see events/[slug].astro for why.
-// Without this the grid would keep showing a stale event list while the detail
-// pages rendered fresh.
-export const prerender = import.meta.env.PROD
+// Prerendered — see events/[slug].astro. This has no getStaticPaths, so its data
+// comes from the fetch below, which re-runs per request in dev. The grid is live
+// without a restart; only newly added ROUTES need one.
+export const prerender = true
 
 // Already filtered to published and sorted by startDate by the CMS query.
 // BentoEvents re-sorts for the grid (past events last); the list view keeps

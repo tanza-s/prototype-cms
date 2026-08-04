@@ -1,0 +1,68 @@
+---
+// Third-party embed — a mailing list signup, a form, a player.
+//
+// THIS IS THE ONE COMPONENT THAT RENDERS CMS CONTENT UNESCAPED.
+//
+// Everywhere else, content is sanitised before it gets here: ../Prose.astro receives
+// HTML that lib/richtext.ts escaped and scheme-checked, and every editor-supplied URL
+// went through safeHref. This block deliberately skips all of that, because a
+// provider's signup form can't be expressed as structured data.
+//
+// Note that set:html runs at BUILD time, so a <script> in the embed is written into
+// the static HTML and executes on page load — this is not client-side innerHTML,
+// where injected scripts stay inert. What makes that acceptable is access control,
+// not sanitising: cms/src/collections/Embeds.ts restricts authoring to admins, and
+// editors can only place embeds an admin already wrote.
+//
+// Do not route this through Prose. Prose exists to share the sanitised path, and
+// reusing it here would blur the one distinction worth keeping visible in the source.
+
+import type { EmbedBlock } from '../../types/payload'
+
+interface Props {
+  block: EmbedBlock
+  /** Forwarded from the parent so reveal/stagger classes land on the root. */
+  class?: string
+}
+
+const { block, class: className } = Astro.props
+
+// Prefer the per-placement heading; fall back to the embed's own name so the region
+// is still labelled for anyone navigating by landmark.
+const label = block.heading ?? block.title
+---
+
+<section class:list={['embed-block', className]} aria-label={label || undefined}>
+  {block.heading && <h2 class="embed-block__heading">{block.heading}</h2>}
+  <div class="embed-block__body" set:html={block.html} />
+</section>
+
+<style>
+  .embed-block {
+    max-width: var(--container-narrow);
+    margin-inline: auto;
+    padding-block: var(--space-12);
+    padding-inline: var(--grid-gutter);
+  }
+
+  .embed-block__heading {
+    margin: 0 0 var(--space-6);
+  }
+
+  /*
+   * Provider markup arrives with its own styling assumptions and no knowledge of this
+   * site's tokens. These are damage control, not design: stop an embed overflowing its
+   * column or forcing a horizontal scrollbar on the whole page.
+   *
+   * :global because the content is injected by set:html and carries no scope attribute,
+   * so a plain descendant selector compiles to something that matches nothing.
+   */
+  .embed-block__body :global(img),
+  .embed-block__body :global(iframe) {
+    max-width: 100%;
+  }
+
+  .embed-block__body :global(iframe) {
+    border: 0;
+  }
+</style>

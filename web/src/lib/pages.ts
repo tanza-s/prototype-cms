@@ -12,6 +12,7 @@ import type {
   CallToActionStyle,
   ContentBlock,
   ContentWidth,
+  EmbedBlock,
   HeroBlock,
   HeroStyle,
   ImageBlock,
@@ -81,12 +82,20 @@ interface CallToActionResponse {
   style?: string | null
 }
 
+interface EmbedResponse {
+  blockType: 'embed'
+  /** Populated at depth >= 1; a bare ID otherwise. */
+  embed?: { title?: string | null; html?: string | null } | number | string | null
+  heading?: string | null
+}
+
 type BlockResponse =
   | HeroResponse
   | ContentResponse
   | ImageResponse
   | MediaWithContentResponse
   | CallToActionResponse
+  | EmbedResponse
 
 interface PageResponse {
   id: string | number
@@ -213,6 +222,27 @@ function mapBlock(block: BlockResponse): PageBlock | null {
         style: oneOf(block.style, CTA_STYLES, 'basic'),
       }
       return cta
+    }
+
+    case 'embed': {
+      // Unpopulated (a bare ID) or deleted since the page was saved. Either way
+      // there's no HTML to render, so drop the block rather than emit an empty region.
+      const source = block.embed
+      if (!source || typeof source !== 'object') return null
+
+      const html = text(source.html)
+      if (!html) return null
+
+      const embed: EmbedBlock = {
+        blockType: 'embed',
+        title: text(source.title) ?? '',
+        heading: text(block.heading),
+        // NOT sanitised, and deliberately so — this is the one path where CMS content
+        // reaches the page verbatim. cms/src/collections/Embeds.ts restricts authoring
+        // to admins to compensate.
+        html,
+      }
+      return embed
     }
 
     default:

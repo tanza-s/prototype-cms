@@ -13,10 +13,23 @@ interface Props {
 }
 
 const { block, class: className } = Astro.props
+
+// Mirrors the measures in the stylesheet below, so the browser picks a rendition
+// matching what it will actually paint rather than assuming full viewport width.
+const SIZES: Record<typeof block.size, string> = {
+  contained: '(min-width: 900px) 900px, 100vw',
+  wide: '(min-width: 1400px) 1400px, 100vw',
+  full: '100vw',
+}
 ---
 
 <div class:list={['image-block', `image-block--${block.size}`, className]}>
-  <Figure image={block.image} caption={block.caption} linkUrl={block.linkUrl} />
+  <Figure
+    image={block.image}
+    caption={block.caption}
+    linkUrl={block.linkUrl}
+    sizes={SIZES[block.size]}
+  />
 </div>
 
 <style>

@@ -6,39 +6,46 @@ import BlockRenderer from "../components/blocks/BlockRenderer.astro";
 
 
 /**
- * Static in production, on-demand in dev.
+ * Prerendered. Production is plain HTML on disk: no server to run, and a CMS
+ * outage can't take the public site down. Content changes reach the site through
+ * a rebuild, not a request.
  *
- * Production keeps plain HTML on disk: no server to run, and a CMS outage can't
- * take the public site down. But that also means the route table is fixed at
- * build time, so an event published afterwards 404s until the next build —
- * which, while authoring, means every new event 404s until the dev server is
- * restarted.
- *
- * Rendering on demand in dev only removes that entirely: each request re-queries
- * Payload, so a newly published event is live on refresh. No adapter is needed,
- * because the production build still prerenders.
+ * This used to read `import.meta.env.PROD`, on the theory that dev would render
+ * on demand and stay live against the CMS. It never did. Astro needs this value
+ * to be statically analyzable, and with no adapter configured there is nothing
+ * that *could* render on demand — so it silently prerendered in dev too, and
+ * getStaticPaths results were cached for the life of the dev server. The result
+ * was editors' changes not appearing for days. Stating it plainly is honest about
+ * what actually happens.
  */
-export const prerender = import.meta.env.PROD;
+export const prerender = true;
 
-// Only consulted when prerendering; on-demand routes get their params from the
-// URL instead, and Astro ignores this.
 export async function getStaticPaths() {
   const pages = await fetchPages();
   return pages.map((page) => ({
     params: { slug: page.slug },
-    // Pass the page through so the page doesn't refetch the whole collection.
+    // Pass the page through so the build doesn't refetch the collection per page.
     props: { page },
   }));
 }
 
 interface Props {
-  /** Supplied by getStaticPaths when prerendering; absent when on-demand. */
+  /** Supplied by getStaticPaths. Ignored in dev — see below. */
   page?: Page;
 }
 
-// Prerendered builds get the page as a prop. Rendering on demand there are no
-// props, so look it up by the slug in the URL.
-let page = Astro.props.page;
+/**
+ * In dev, refetch instead of trusting the prop.
+ *
+ * Astro caches getStaticPaths for the dev server's lifetime, so the props it
+ * carries go stale the moment anyone edits in the CMS. The component body, by
+ * contrast, re-runs on every request — so fetching here is what makes edits show
+ * up on refresh. The build still uses the prop, keeping it to one request total.
+ *
+ * The route *list* is still cached, so a newly created page 404s until the dev
+ * server restarts. Fixing that needs an adapter; see web/CLAUDE.md.
+ */
+let page = import.meta.env.DEV ? undefined : Astro.props.page;
 if (!page) {
   const pages = await fetchPages();
   page = pages.find((candidate) => candidate.slug === Astro.params.slug);

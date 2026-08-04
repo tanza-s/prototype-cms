@@ -17,13 +17,24 @@ const { block, class: className } = Astro.props
 
 const showsImage = block.style === 'image' && Boolean(block.image)
 const isExternal = /^https?:\/\//i.test(block.url)
+
+/** Half the 1400px container above the breakpoint, full width below it. */
+const IMAGE_SIZES = '(min-width: 768px) 700px, 100vw'
 ---
 
 <section class:list={['cta-block', `cta-block--${block.style}`, className]}>
   {
     showsImage && block.image && (
       <div class="cta-block__image">
-        <img src={block.image.url} alt={block.image.alt} loading="lazy" />
+        <img
+          src={block.image.url}
+          srcset={block.image.srcset || undefined}
+          sizes={block.image.srcset ? IMAGE_SIZES : undefined}
+          width={block.image.width ?? undefined}
+          height={block.image.height ?? undefined}
+          alt={block.image.alt}
+          loading="lazy"
+        />
       </div>
     )
   }
@@ -32,7 +43,6 @@ const isExternal = /^https?:\/\//i.test(block.url)
     {block.title && <h2 class="cta-block__title">{block.title}</h2>}
     {block.description && <p class="cta-block__description">{block.description}</p>}
 
-    {/* url is '' when safeHref rejected it — that would be a link to nowhere. */}
     {
       block.url && block.label && (
         <a

@@ -6,39 +6,43 @@ import { formatEventScheduleParts, toDateTimeAttr } from "../../lib/dates";
 import { truncateAtWord } from "../../lib/richtext";
 
 /**
- * Static in production, on-demand in dev.
+ * Prerendered. Production is plain HTML on disk: no server to run, and a CMS
+ * outage can't take the public site down. Content changes reach the site through
+ * a rebuild, not a request.
  *
- * Production keeps plain HTML on disk: no server to run, and a CMS outage can't
- * take the public site down. But that also means the route table is fixed at
- * build time, so an event published afterwards 404s until the next build —
- * which, while authoring, means every new event 404s until the dev server is
- * restarted.
- *
- * Rendering on demand in dev only removes that entirely: each request re-queries
- * Payload, so a newly published event is live on refresh. No adapter is needed,
- * because the production build still prerenders.
+ * This used to read `import.meta.env.PROD`, on the theory that dev would render
+ * on demand and stay live against the CMS. It never did — Astro needs the value
+ * to be statically analyzable, and with no adapter configured there is nothing
+ * that could render on demand, so it prerendered in dev too.
  */
-export const prerender = import.meta.env.PROD;
+export const prerender = true;
 
-// Only consulted when prerendering; on-demand routes get their params from the
-// URL instead, and Astro ignores this.
 export async function getStaticPaths() {
   const events = await fetchEvents();
   return events.map((event) => ({
     params: { slug: event.slug },
-    // Pass the event through so the page doesn't refetch the whole collection.
+    // Pass the event through so the build doesn't refetch the collection per page.
     props: { event },
   }));
 }
 
 interface Props {
-  /** Supplied by getStaticPaths when prerendering; absent when on-demand. */
+  /** Supplied by getStaticPaths. Ignored in dev — see below. */
   event?: Event;
 }
 
-// Prerendered builds get the event as a prop. Rendering on demand there are no
-// props, so look it up by the slug in the URL.
-let event = Astro.props.event;
+/**
+ * In dev, refetch instead of trusting the prop.
+ *
+ * Astro caches getStaticPaths for the dev server's lifetime, so its props go stale
+ * as soon as anyone edits in the CMS. The component body re-runs per request, so
+ * fetching here is what makes edits appear on refresh. The build still uses the
+ * prop, keeping it to one request total.
+ *
+ * The route *list* stays cached, so a newly published event 404s until the dev
+ * server restarts. Fixing that needs an adapter; see web/CLAUDE.md.
+ */
+let event = import.meta.env.DEV ? undefined : Astro.props.event;
 if (!event) {
   const events = await fetchEvents();
   event = events.find((candidate) => candidate.slug === Astro.params.slug);

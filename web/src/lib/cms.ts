@@ -35,11 +35,22 @@ export function slugify(text: string): string {
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
 }
 
+/** One generated rendition, as it appears under a media document's `sizes`. */
+interface MediaSizeResponse {
+  url?: string | null
+  width?: number | null
+  height?: number | null
+}
+
 /** An upload as Payload returns it once populated (depth >= 1). */
 export interface MediaResponse {
   id: string | number
   url?: string
   alt?: string
+  width?: number | null
+  height?: number | null
+  /** Keyed by the size names in cms/src/collections/Media.ts. */
+  sizes?: Record<string, MediaSizeResponse | null | undefined> | null
 }
 
 interface PaginatedResponse<T> {
@@ -65,9 +76,60 @@ export function mapImage(
 ): MediaImage | null {
   if (!image || typeof image !== 'object' || !image.url) return null
 
+  const renditions = collectRenditions(image.sizes)
+
+  return {
+    // Prefer a mid-size rendition over the original. Every existing `<img src>` on
+    // the site therefore gets the smaller file for free, and a browser that ignores
+    // srcset never falls back to a multi-megabyte original.
+    url: pickDefault(renditions) ?? absoluteUrl(image.url),
+    alt: altOverride?.trim() || image.alt || '',
+    srcset: renditions.map(({ url, width }) => `${url} ${width}w`).join(', '),
+    // From the ORIGINAL, not the rendition: these exist to fix the aspect ratio so
+    // the layout doesn't shift while the image loads, and the ratio is the same
+    // whichever rendition the browser picks.
+    width: image.width ?? null,
+    height: image.height ?? null,
+  }
+}
+
+function absoluteUrl(url: string): string {
   // Payload returns a site-relative URL like /api/media/file/foo.jpg
-  const url = /^https?:\/\//i.test(image.url) ? image.url : `${CMS_URL}${image.url}`
-  return { url, alt: altOverride?.trim() || image.alt || '' }
+  return /^https?:\/\//i.test(url) ? url : `${CMS_URL}${url}`
+}
+
+/**
+ * Renditions sorted narrowest-first, one per width.
+ *
+ * Deduplication is required, not tidiness: `withoutEnlargement: true` makes every
+ * size larger than the original return the original's width, so a 640px upload
+ * yields medium and large both at 640w. Repeating a width in a srcset gives the
+ * browser two indistinguishable candidates for the same slot.
+ */
+function collectRenditions(
+  sizes: MediaResponse['sizes'],
+): Array<{ url: string; width: number }> {
+  const byWidth = new Map<number, string>()
+
+  for (const size of Object.values(sizes ?? {})) {
+    if (!size?.url || !size.width) continue
+    if (!byWidth.has(size.width)) byWidth.set(size.width, absoluteUrl(size.url))
+  }
+
+  return [...byWidth.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([width, url]) => ({ url, width }))
+}
+
+/**
+ * The `src` fallback: the narrowest rendition at least 1200px wide, or the widest
+ * available when the original was smaller than that. Wide enough for a full-width
+ * block on a normal display, and never the unoptimised original.
+ */
+function pickDefault(renditions: Array<{ url: string; width: number }>): string | null {
+  if (!renditions.length) return null
+  const preferred = renditions.find(({ width }) => width >= 1200)
+  return (preferred ?? renditions[renditions.length - 1]).url
 }
 
 /**

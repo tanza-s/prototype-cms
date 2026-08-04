@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     events: Event;
     pages: Page;
+    embeds: Embed;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +83,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
+    embeds: EmbedsSelect<false> | EmbedsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -127,6 +129,10 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * Admins can create and edit embeds, which hold raw HTML. Editors can place an existing embed on a page but not author a new one.
+   */
+  roles?: ('admin' | 'editor')[] | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -164,6 +170,40 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    small?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    medium?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    large?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -250,7 +290,7 @@ export interface Page {
   /**
    * Add, reorder, and remove blocks to compose the page.
    */
-  layout?: (HeroBlock | ContentBlock | ImageBlock | MediaWithContentBlock | CallToActionBlock)[] | null;
+  layout?: (HeroBlock | ContentBlock | ImageBlock | MediaWithContentBlock | CallToActionBlock | EmbedBlock)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -393,6 +433,46 @@ export interface CallToActionBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "EmbedBlock".
+ */
+export interface EmbedBlock {
+  /**
+   * Choose an embed. Ask an admin if the one you need isn’t listed.
+   */
+  embed: number | Embed;
+  /**
+   * Optional. Shown above the embed on this page only.
+   */
+  heading?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'embed';
+}
+/**
+ * Raw HTML from a third party. Only admins can create or edit these.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "embeds".
+ */
+export interface Embed {
+  id: number;
+  /**
+   * What editors will see in the chooser. Name it for where it goes.
+   */
+  title: string;
+  /**
+   * Optional note for editors — what this is, and where it belongs.
+   */
+  description?: string | null;
+  /**
+   * Paste the provider’s embed code. This runs on the live site exactly as written, including any <script> tags — check the source before saving.
+   */
+  html: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -430,6 +510,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'pages';
         value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'embeds';
+        value: number | Embed;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -478,6 +562,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  roles?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -512,6 +597,50 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        small?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        medium?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        large?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -556,6 +685,7 @@ export interface PagesSelect<T extends boolean = true> {
         image?: T | ImageBlockSelect<T>;
         mediaWithContent?: T | MediaWithContentBlockSelect<T>;
         callToAction?: T | CallToActionBlockSelect<T>;
+        embed?: T | EmbedBlockSelect<T>;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -631,6 +761,27 @@ export interface CallToActionBlockSelect<T extends boolean = true> {
   style?: T;
   id?: T;
   blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "EmbedBlock_select".
+ */
+export interface EmbedBlockSelect<T extends boolean = true> {
+  embed?: T;
+  heading?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "embeds_select".
+ */
+export interface EmbedsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  html?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

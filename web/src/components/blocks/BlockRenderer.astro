@@ -8,6 +8,7 @@
 import type { PageBlock } from '../../types/payload'
 import CallToAction from './CallToAction.astro'
 import Content from './Content.astro'
+import Embed from './Embed.astro'
 import Hero from './Hero.astro'
 import Image from './Image.astro'
 import MediaWithContent from './MediaWithContent.astro'
@@ -31,6 +32,7 @@ const COMPONENTS: Record<PageBlock['blockType'], any> = {
   image: Image,
   mediaWithContent: MediaWithContent,
   callToAction: CallToAction,
+  embed: Embed,
 }
 ---
 
