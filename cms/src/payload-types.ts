@@ -419,7 +419,7 @@ export interface MediaWithContentBlock {
  */
 export interface CallToActionBlock {
   title?: string | null;
-  description: string;
+  description?: string | null;
   label: string;
   /**
    * Use https:// for external links, and relative paths for internal links (e.g., /about).

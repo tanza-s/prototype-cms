@@ -193,7 +193,7 @@ export type CallToActionStyle = 'basic' | 'featured' | 'image'
 export interface CallToActionBlock {
   blockType: 'callToAction'
   title: string | null
-  description: string
+  description: string | null
   label: string
   url: string
   image: MediaImage | null

@@ -10,6 +10,7 @@
 import type { MediaWithContentBlock } from '../../types/payload'
 import Figure from '../Figure.astro'
 import Prose from '../Prose.astro'
+import ArrowSimple from '../arrows/ArrowSimple.astro'
 
 interface Props {
   block: MediaWithContentBlock
@@ -52,13 +53,14 @@ const MEDIA_SIZES = '(min-width: 768px) 700px, 100vw'
           {block.callToAction.map((link) => (
             <li>
               <a
-                class="button button--ghost"
+                class="cta__link cta__link--simple"
                 href={link.url}
                 rel={
                   /^https?:\/\//i.test(link.url) ? 'noopener noreferrer' : undefined
                 }
               >
                 {link.label}
+                <ArrowSimple class="cta__arrow cta__arrow--basic" />
               </a>
             </li>
           ))}

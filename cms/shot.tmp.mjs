@@ -1,0 +1,11 @@
+import { chromium } from '@playwright/test'
+const out = process.argv[2], width = Number(process.argv[3] || 1440)
+const browser = await chromium.launch()
+const page = await browser.newPage({ viewport: { width, height: 1200 } })
+await page.goto('http://localhost:4321/legacy', { waitUntil: 'networkidle' })
+const el = page.locator('.cta-block--image').first()
+await el.scrollIntoViewIfNeeded()
+await page.waitForTimeout(500)
+await el.screenshot({ path: out })
+await browser.close()
+console.log('saved', out)

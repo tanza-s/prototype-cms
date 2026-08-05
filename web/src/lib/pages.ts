@@ -215,7 +215,7 @@ function mapBlock(block: BlockResponse): PageBlock | null {
       const cta: CallToActionBlock = {
         blockType: 'callToAction',
         title: text(block.title),
-        description: text(block.description) ?? '',
+        description: text(block.description),
         label: text(block.label) ?? '',
         url: safeHref(block.url) ?? '',
         image: mapImage(block.image),

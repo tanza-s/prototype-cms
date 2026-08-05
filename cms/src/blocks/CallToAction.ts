@@ -11,7 +11,6 @@ export const CallToAction: Block = {
     {
       name: 'description',
       type: 'textarea',
-      required: true,
     },
     {
       name: 'label',

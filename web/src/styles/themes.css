@@ -48,6 +48,7 @@
   --grid-columns: 12;
   --grid-gutter: clamp(1rem, 2vw, 2rem);
   --container-max: 1400px;
+  --container-wide: 1200px;
   /* Narrower measure for long-form reading (event detail body) */
   --container-narrow: 900px;
 

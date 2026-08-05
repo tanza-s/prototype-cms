@@ -6,6 +6,9 @@
 // announces as two separate ones.
 
 import type { CallToActionBlock } from '../../types/payload'
+import ArrowSimple from '../arrows/ArrowSimple.astro'
+import Arrow from '../arrows/Arrow.astro'
+import ArrowWavy from '../arrows/ArrowWavy.astro'
 
 interface Props {
   block: CallToActionBlock
@@ -18,8 +21,12 @@ const { block, class: className } = Astro.props
 const showsImage = block.style === 'image' && Boolean(block.image)
 const isExternal = /^https?:\/\//i.test(block.url)
 
-/** Half the 1400px container above the breakpoint, full width below it. */
-const IMAGE_SIZES = '(min-width: 768px) 700px, 100vw'
+/**
+ * The photo column is 34% of the 1200px container above the breakpoint — about
+ * 410px — and full width below it. Overstating this is the common way srcset stops
+ * saving anything, since the browser just picks the largest candidate.
+ */
+const IMAGE_SIZES = '(min-width: 768px) 420px, 100vw'
 ---
 
 <section class:list={['cta-block', `cta-block--${block.style}`, className]}>
@@ -46,11 +53,14 @@ const IMAGE_SIZES = '(min-width: 768px) 700px, 100vw'
     {
       block.url && block.label && (
         <a
-          class:list={['button', { 'button--ghost': block.style === 'basic' }]}
+          class:list={['cta__link', `cta__link--${block.style}`]}
           href={block.url}
           rel={isExternal ? 'noopener noreferrer' : undefined}
         >
           {block.label}
+          {block.style === 'basic' && <ArrowSimple class:list={['cta__arrow', `cta__arrow--${block.style}`]} />}
+          {block.style === 'featured' && <ArrowWavy class:list={['cta__arrow', `cta__arrow--${block.style}`]} />}
+          {block.style === 'image' && <Arrow class:list={['cta__arrow', `cta__arrow--${block.style}`]} />}
         </a>
       )
     }
@@ -61,7 +71,6 @@ const IMAGE_SIZES = '(min-width: 768px) 700px, 100vw'
   .cta-block {
     max-width: var(--container-narrow);
     margin-inline: auto;
-    padding-block: var(--space-12);
     padding-inline: var(--grid-gutter);
   }
 
@@ -89,17 +98,158 @@ const IMAGE_SIZES = '(min-width: 768px) 700px, 100vw'
     background-color: color-mix(in srgb, var(--color-text) 4%, transparent);
   }
 
+  /* ------------------------------------------------------------------ image
+   *
+   * An offset composition: the photo overhangs a panel that is inset from the left
+   * and runs to the far edge, so neither block is aligned to the other on any side.
+   *
+   * Stacked below the breakpoint, where an overlap has nowhere to go — the body just
+   * carries the panel colour itself, and the pseudo-element is only introduced above
+   * 768px where it can sit behind both columns.
+   */
   .cta-block--image {
     display: grid;
-    gap: var(--space-6);
-    max-width: var(--container-max);
+    gap: 0;
+    max-width: var(--container-wide);
+    padding-block: var(--space-12);
   }
+
+  .cta-block--image .cta-block__body {
+    padding: var(--space-8);
+    background-color: var(--color-surface);
+  }
+
+  /*
+   * A centre-cropped square, so the composition holds whatever shape the editor
+   * uploads — a portrait and a landscape photo produce the same silhouette, and the
+   * panel's offset stays predictable instead of being dictated by the image.
+   *
+   * `aspect-ratio` sizes the box and `object-fit: cover` fills it, cropping the long
+   * axis. Without the cover, the base rule's `height: auto` would letterbox instead.
+   *
+   * Square corners too: the composition reads as overlapping sheets of paper, which
+   * a border radius undercuts.
+   */
+  .cta-block--image .cta-block__image img {
+    aspect-ratio: 1;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0;
+  }
+
+  :global(.cta__link--image) {
+    position: relative;
+    background: 0 !important;
+    color: var(--color-accent);
+    font-size: 1.2em;
+    margin-bottom: var(--space-4);
+  }
+
+  :global(.cta__link--image:hover) {
+    .cta__arrow {
+        transform: translateX(1em);
+        transition: transform 0.2s ease-in-out;
+    }
+  }
+
+  :global(.cta__arrow--image) {
+    width: 2em;
+    height: auto;
+    margin-inline: 0;
+    position: absolute;
+    right: -1.25em;
+    bottom: -0.75em;
+  }
+
+  :global(.cta__link) {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  :global(.cta__link--featured) {
+    position: relative;
+    font-size: 1.2em;
+    background: 0 !important;
+  }
+
+  :global(.cta__link--featured:hover) {
+    .cta__arrow {
+        transform: translateY(1em);
+        transition: transform 0.2s ease-in-out;
+    }
+  }
+
+  :global(.cta__arrow) {
+    display: inline-block;
+    margin-inline-start: var(--space-2);
+  }
+
+  :global(.cta__arrow--basic) {
+   rotate: 270deg;
+   height: 1em;
+   width: 1em;
+  }
+
+  :global(.cta__arrow--featured) {
+    height: 3.5em;
+    width: 1.5em;
+    rotate: 270deg;
+    position: absolute;
+    right: -1em;
+    bottom: -1.85em;
+  }
+
 
   @media (min-width: 768px) {
     .cta-block--image {
-      grid-template-columns: 1fr 1fr;
-      align-items: center;
-      gap: var(--space-10);
+      position: relative;
+      /* Photo takes roughly a third; the text column gets the rest. */
+      grid-template-columns: minmax(0, 34%) minmax(0, 1fr);
+      column-gap: clamp(var(--space-8), 5vw, var(--space-16));
+      align-items: start;
+    }
+
+    /*
+     * The panel. Starts 16% in — partway across the photo column — so the photo
+     * overhangs its leading edge. Inset from the top by --cta-overhang so the photo
+     * also breaks the panel's top line; that single offset is what stops the
+     * composition reading as a plain two-column row.
+     */
+    .cta-block--image {
+      --cta-overhang: var(--space-10);
+    }
+
+    .cta-block--image::before {
+      content: '';
+      position: absolute;
+      z-index: 0;
+      inset-block: calc(var(--space-12) + var(--cta-overhang)) 0;
+      /*
+       * The end inset is the gutter, NOT 0. An absolutely positioned element resolves
+       * its insets against the containing block's PADDING box, so `0` would put the
+       * panel's edge outside .cta-block's padding-inline — flush against the viewport
+       * on any screen narrower than --container-wide, where max-width stops binding.
+       */
+      inset-inline: 16% var(--grid-gutter);
+      background-color: var(--color-surface);
+    }
+
+    /* Both columns sit above the panel; without this the panel paints over them. */
+    .cta-block--image > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* The panel already provides the fill above this breakpoint. */
+    .cta-block--image .cta-block__body {
+      background-color: transparent;
+      /*
+       * Bottom padding is deliberately heavier than the top. It's what makes the
+       * panel extend past the foot of the photo, which is the second half of the
+       * offset — matching tops and bottoms would square the composition back up.
+       */
+      padding: calc(var(--space-12) + var(--cta-overhang)) var(--space-10)
+        var(--space-16);
     }
   }
 </style>
