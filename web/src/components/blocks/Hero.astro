@@ -79,7 +79,7 @@ const isOverlay = block.style === 'full' && Boolean(block.backgroundImage)
 
   .hero-block__heading {
     margin: 0;
-    max-width: 20ch; /* headlines break badly when they run the full width */
+    max-width: 40ch; /* headlines break badly when they run the full width */
   }
 
   /*
@@ -91,6 +91,12 @@ const isOverlay = block.style === 'full' && Boolean(block.backgroundImage)
   :global(.hero-block__intro) {
     margin-block-start: var(--space-5);
     max-width: var(--container-narrow);
+  }
+
+  .hero-block--center :global(.hero-block__intro){
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   /* -------------------------------------------------------------- banner */
@@ -108,6 +114,7 @@ const isOverlay = block.style === 'full' && Boolean(block.backgroundImage)
     height: auto;
     border-radius: var(--radius-card);
   }
+
 
   .hero-block--center .hero-block__content {
     text-align: center;

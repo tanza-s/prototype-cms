@@ -105,6 +105,7 @@ export type PageBlock =
   | MediaWithContentBlock
   | CallToActionBlock
   | EmbedBlock
+  | GalleryBlock
 
 /** A labelled link. Mirrors the label/url pair used by both link-bearing blocks. */
 export interface PageLink {
@@ -198,4 +199,25 @@ export interface CallToActionBlock {
   url: string
   image: MediaImage | null
   style: CallToActionStyle
+}
+
+export type GalleryColumns = '2' | '3' | '4'
+
+export type GalleryTileShape = 'landscape' | 'square' | 'portrait' | 'natural'
+
+export interface GalleryImage {
+  image: MediaImage
+  caption: string | null
+}
+
+export interface GalleryBlock {
+  blockType: 'gallery'
+  title: string | null
+  description: string
+  images: GalleryImage[]
+  columns: '2' | '3' | '4'
+  tileShape: 'landscape' | 'square' | 'portrait' | 'natural'
+  featureFirst: boolean
+  enableSlideshow: boolean
+  showCaptionsInGrid: boolean
 }

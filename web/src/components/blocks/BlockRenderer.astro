@@ -1,7 +1,7 @@
 ---
 // Renders an editor's block sequence in order.
 //
-// Adding a sixth block is: a Block file in cms/src/blocks/, a component here, a
+// Add additional blocks block by creating a Block file in cms/src/blocks/, a component here, a
 // mapBlock case in lib/pages.ts, a union member in types/payload.ts, and one line
 // in COMPONENTS below.
 
@@ -11,6 +11,7 @@ import Content from './Content.astro'
 import Embed from './Embed.astro'
 import Hero from './Hero.astro'
 import Image from './Image.astro'
+import Gallery from './Gallery.astro'
 import MediaWithContent from './MediaWithContent.astro'
 
 interface Props {
@@ -33,6 +34,7 @@ const COMPONENTS: Record<PageBlock['blockType'], any> = {
   mediaWithContent: MediaWithContent,
   callToAction: CallToAction,
   embed: Embed,
+  gallery: Gallery,
 }
 ---
 

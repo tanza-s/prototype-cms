@@ -13,6 +13,10 @@ import type {
   ContentBlock,
   ContentWidth,
   EmbedBlock,
+  GalleryBlock,
+  GalleryImage,
+  GalleryColumns,
+  GalleryTileShape,
   HeroBlock,
   HeroStyle,
   ImageBlock,
@@ -89,6 +93,24 @@ interface EmbedResponse {
   heading?: string | null
 }
 
+interface GalleryItemResponse {
+  image?: UploadResponse
+  altText?: string | null
+  caption?: unknown
+}
+
+interface GalleryResponse {
+  blockType: 'gallery'
+  title?: string | null
+  description?: unknown
+  images?: GalleryItemResponse[] | null
+  columns?: string | null
+  tileShape?: string | null
+  featureFirst?: boolean | null
+  enableSlideshow?: boolean | null
+  showCaptionsInGrid?: boolean | null
+}
+
 type BlockResponse =
   | HeroResponse
   | ContentResponse
@@ -96,6 +118,7 @@ type BlockResponse =
   | MediaWithContentResponse
   | CallToActionResponse
   | EmbedResponse
+  | GalleryResponse
 
 interface PageResponse {
   id: string | number
@@ -127,6 +150,13 @@ const CONTENT_WIDTHS: readonly ContentWidth[] = ['narrow', 'wide', 'full']
 const IMAGE_SIZES: readonly ImageSize[] = ['contained', 'wide', 'full']
 const MEDIA_ALIGNMENTS: readonly MediaAlignment[] = ['left', 'right']
 const CTA_STYLES: readonly CallToActionStyle[] = ['basic', 'featured', 'image']
+const GALLERY_COLUMNS: readonly GalleryColumns[] = ['2', '3', '4']
+const GALLERY_TILE_SHAPES: readonly GalleryTileShape[] = [
+  'landscape',
+  'square',
+  'portrait',
+  'natural',
+]
 
 /**
  * Collapse absent, null, and whitespace-only strings into one representation, so a
@@ -243,6 +273,32 @@ function mapBlock(block: BlockResponse): PageBlock | null {
         html,
       }
       return embed
+    }
+
+    case 'gallery': {
+      // Same reduce/drop pattern as mapLinks: a row whose upload was deleted has nothing
+      // to show, and a gallery with no surviving rows is an empty region — drop both.
+      const rows = Array.isArray(block.images) ? block.images : []
+      const images = rows.reduce<GalleryImage[]>((acc, row) => {
+        const image = mapImage(row?.image, row?.altText)
+        if (image) acc.push({ image, caption: lexicalToHtml(row?.caption) })
+        return acc
+      }, [])
+      if (!images.length) return null
+
+      const gallery: GalleryBlock = {
+        blockType: 'gallery',
+        title: text(block.title),
+        description: lexicalToHtml(block.description),
+        images,
+        columns: oneOf(block.columns, GALLERY_COLUMNS, '3'),
+        tileShape: oneOf(block.tileShape, GALLERY_TILE_SHAPES, 'landscape'),
+        featureFirst: block.featureFirst === true,
+        // Default-on, so a row saved before this field existed still opens.
+        enableSlideshow: block.enableSlideshow !== false,
+        showCaptionsInGrid: block.showCaptionsInGrid === true,
+      }
+      return gallery
     }
 
     default:
