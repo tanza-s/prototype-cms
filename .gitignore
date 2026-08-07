@@ -2,4 +2,6 @@ node_modules/
 .env
 cms/.next/
 web/dist/
-web/.astro/
+# Astro's generated types. Not scoped to web/ — running an astro command from the
+# wrong directory creates one there too, which is how cms/.astro/ got committed.
+.astro/
