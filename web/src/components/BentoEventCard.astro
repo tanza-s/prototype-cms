@@ -1,11 +1,8 @@
 ---
 /**
- * BentoEventCard — the tile used inside BentoEvents.
- *
- * A sibling to EventCard rather than a variant of it: the bento tile has its own
- * anatomy (accent bar, past badge, clamped copy, type that scales with the tile)
- * and folding that into EventCard's horizontal/stacked logic would tangle both.
- * EventCard stays the list-view card.
+ * The tile used inside BentoEvents. A sibling to EventCard, not a variant: this one
+ * has its own anatomy (accent bar, past badge, clamped copy, type that scales with
+ * the tile). EventCard stays the list-view card.
  */
 import type { BentoSize } from '../lib/bento'
 import type { Event } from '../types/payload'
@@ -107,10 +104,8 @@ const dateRange = formatEventSchedule(event)
     opacity: 1;
   }
 
-  /* A fixed aspect ratio is load-bearing, not decoration: without it a portrait
-     upload expands to its intrinsic height and drags the whole grid row with it.
-     `flex: none` keeps the ratio authoritative and lets __content absorb any
-     slack when a neighbouring tile makes the row taller. */
+  /* Load-bearing, not decoration: without a fixed ratio a portrait upload expands
+     to its intrinsic height and drags the whole grid row with it. */
   .bento-card__image {
     flex: none;
     aspect-ratio: 3 / 2;
@@ -122,9 +117,7 @@ const dateRange = formatEventSchedule(event)
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Event art is mostly posters, which carry their title at the top — a
-       centred crop of a portrait poster into a landscape tile loses exactly the
-       part worth showing. */
+    /* Posters carry their title at the top, which a centred crop would lose. */
     object-position: center top;
     transition: transform var(--duration-slow) var(--ease-out-expo);
   }
@@ -158,9 +151,7 @@ const dateRange = formatEventSchedule(event)
     font-size: var(--text-lg);
     text-wrap: balance;
     color: var(--color-text);
-    /* Titles come from editors and can run long ("DMBA Venture Studio Showcase:
-       Five Ventures. One Belief. …"). Unclamped, one of those crowds every other
-       element out of its tile. */
+    /* Editor titles can run long; unclamped, one crowds out its whole tile. */
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: var(--title-lines, 3);
@@ -210,14 +201,10 @@ const dateRange = formatEventSchedule(event)
   }
 
   /* ------------------------------------------------------- size type ramp
-     A 2x2 tile with 1x1 type reads as a rendering bug, so the type scales with
-     the footprint. Only applies from 1024px up, where the spans are honoured —
-     below that every tile is full width and the ramp would just be shouting. */
+     Type scales with the footprint, from 1024px up where the spans are honoured. */
   @media (min-width: 1024px) {
-    /* The ramp follows tile *width*, not area. `tall` is one column wide — the
-       same as `compact` — so it keeps the baseline size and earns its space
-       through the image and description instead. Only the 2-column tiles scale
-       their type up. */
+    /* The ramp follows tile *width*, not area, so `tall` keeps the baseline size
+       and only the 2-column tiles scale up. */
     .bento-card--large .bento-card__title {
       font-size: var(--text-3xl);
     }
@@ -239,9 +226,8 @@ const dateRange = formatEventSchedule(event)
       padding: var(--space-6);
     }
 
-    /* A wide tile has width to spare but only one row of height, so the copy
-       runs alongside the meta rather than stacking above it and forcing the row
-       taller than its neighbours. */
+    /* One row of height, so the copy runs alongside the meta rather than stacking
+       and forcing the row taller than its neighbours. */
     .bento-card--wide .bento-card__content {
       flex-direction: row;
       align-items: center;
@@ -255,8 +241,8 @@ const dateRange = formatEventSchedule(event)
       text-align: end;
     }
 
-    /* align-self:flex-start pins the badge to the top in a column card; in the
-       wide card's row it would hang off the top edge instead. */
+    /* The column card's align-self:flex-start would hang the badge off the top
+       edge of the wide card's row. */
     .bento-card--wide .bento-card__badge {
       align-self: center;
     }

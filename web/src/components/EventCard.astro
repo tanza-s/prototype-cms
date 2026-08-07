@@ -4,11 +4,7 @@ import { formatEventSchedule, toDateTimeAttr } from '../lib/dates'
 
 interface Props {
   event: Event
-  /**
-   * Number of columns the card is sitting in. At 1 the card goes horizontal —
-   * image alongside the content — since it has the full width to work with.
-   * At 2+ it stacks to fit a narrower column.
-   */
+  /** Columns the card sits in: 1 goes horizontal, 2+ stacks. */
   columns?: number
   /** Forwarded from the parent so reveal/stagger classes land on the root. */
   class?: string
@@ -93,8 +89,7 @@ const dateRange = formatEventSchedule(event)
       align-items: stretch;
     }
 
-    /* Without an image the content must span the full card rather than being
-       trapped in the 320px column. */
+    /* No image, so the content spans the card rather than the 320px column. */
     .event-card--horizontal.event-card--no-image {
       grid-template-columns: 1fr;
     }

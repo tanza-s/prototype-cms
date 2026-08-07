@@ -2,8 +2,7 @@
 // The page opener: eyebrow, heading, optional intro, optional image.
 //
 // `style` is a preset, not an alignment axis — 'full' bleeds the image behind the
-// text while 'left'/'center' run it as a banner above. Grouping them in one select
-// means an editor picks a look rather than assembling one from knobs.
+// text while 'left'/'center' run it as a banner above.
 
 import type { HeroBlock } from '../../types/payload'
 import Prose from '../Prose.astro'
@@ -79,21 +78,19 @@ const isOverlay = block.style === 'full' && Boolean(block.backgroundImage)
 
   .hero-block__heading {
     margin: 0;
-    max-width: 40ch; /* headlines break badly when they run the full width */
+    max-width: 40ch; /* a measure for headlines, wider than the body's 65ch */
   }
 
   /*
-   * :global because .hero-block__intro is a class handed to <Prose>, so the element
-   * carries Prose's style scope, not this file's. Without it the selector compiles
-   * with this component's scope attribute and silently matches nothing. Safe to
-   * globalise because the name is already namespaced to this block.
+   * :global because .hero-block__intro is handed to <Prose>, so the element carries
+   * Prose's style scope, not this file's, and a plain selector matches nothing.
    */
   :global(.hero-block__intro) {
     margin-block-start: var(--space-5);
     max-width: var(--container-narrow);
   }
 
-  .hero-block--center :global(.hero-block__intro){
+  .hero-block--center :global(.hero-block__intro) {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -130,10 +127,7 @@ const isOverlay = block.style === 'full' && Boolean(block.backgroundImage)
 
   /* -------------------------------------------------------------- overlay */
 
-  /*
-   * Only 'full' *with* an image overlays. Without one there is nothing to bleed, so
-   * the block falls back to the banner rules above rather than reserving empty height.
-   */
+  /* Only 'full' *with* an image overlays; without one it falls back to banner. */
   .hero-block--overlay {
     display: grid;
     padding-block: 0;

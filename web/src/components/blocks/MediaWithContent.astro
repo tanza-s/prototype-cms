@@ -1,11 +1,8 @@
 ---
 // Two columns: media on one side, rich text on the other, side selectable per block.
 //
-// Media comes FIRST in the DOM and the flip is done visually with `order`. Reordering
-// the source instead would put the image after the text for imageAlignment: 'right',
-// changing reading and tab order to achieve a purely visual difference. Below the
-// breakpoint the columns stack and `order` stops applying, so media leads — which is
-// the right reading order for an image that introduces its text.
+// Media comes FIRST in the DOM and the flip is visual, via `order`. Reordering the
+// source would change reading and tab order to achieve a purely visual difference.
 
 import type { MediaWithContentBlock } from '../../types/payload'
 import Figure from '../Figure.astro'
@@ -100,22 +97,15 @@ const MEDIA_SIZES = '(min-width: 768px) 700px, 100vw'
     }
 
     /*
-     * The visual flip. DOM order is unchanged — see the note at the top of the file.
-     *
-     * This moves the BODY to the front rather than the media to the back, which looks
-     * like the long way round but is the only version that works: <Figure> renders in
-     * its own component's style scope, so a selector written here compiles to
-     * `.media-with-content__media[data-astro-cid-<this file>]` and never matches it.
-     * `__body` is a plain div this file owns, so it carries the right scope.
+     * Moves the BODY forward rather than the media back — the only version that
+     * works, because <Figure> renders in its own style scope and a selector for
+     * `__media` written here never matches it. `__body` is a div this file owns.
      */
     .media-with-content--right .media-with-content__body {
       order: -1;
     }
 
-    /*
-     * With no image there's no second column to fill, so a half-width text block
-     * would just look broken. Mirrors .event-card--no-image in EventCard.astro.
-     */
+    /* No image, no second column to fill. Mirrors .event-card--no-image. */
     .media-with-content--no-media {
       grid-template-columns: minmax(0, var(--container-narrow));
       justify-content: center;

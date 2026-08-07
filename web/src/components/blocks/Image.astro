@@ -33,7 +33,6 @@ const SIZES: Record<typeof block.size, string> = {
 </div>
 
 <style>
-  /* Same custom-property approach as Content.astro. */
   .image-block {
     max-width: var(--image-measure);
     margin-inline: auto;
@@ -50,10 +49,9 @@ const SIZES: Record<typeof block.size, string> = {
   }
 
   /*
-   * Unlike Content's "full", this one really does reach the viewport edge. An image
-   * has no reading measure to protect, which is the entire point of a bleed. The two
-   * custom properties below cross into Figure's scope, where a descendant selector
-   * written here would not match.
+   * Unlike Content's "full", this one really does reach the viewport edge. The two
+   * custom properties cross into Figure's scope, where a descendant selector written
+   * here would not match.
    */
   .image-block--full {
     --image-measure: none;

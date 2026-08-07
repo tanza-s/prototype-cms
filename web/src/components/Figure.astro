@@ -1,14 +1,11 @@
 ---
 // A content image: optional caption, optional link.
 //
-// Only the <img> goes inside the anchor, never the <figcaption>. Wrapping the whole
-// figure would fold the caption into the link's accessible name, so a screen reader
-// would announce the alt text and the caption as one run-on link. Keeping that rule
-// here means it holds everywhere an image appears, rather than in each block.
+// Only the <img> goes inside the anchor, never the <figcaption> — wrapping the whole
+// figure folds the caption into the link's accessible name.
 //
-// Like Prose, it has no opinion about width or position. Callers tune the two things
-// that do vary through custom properties, which cross Astro's style scoping where a
-// plain descendant selector would not.
+// No opinion about width or position. Callers tune what varies through custom
+// properties, which cross Astro's style scoping where a descendant selector doesn't.
 
 import type { MediaImage } from '../types/payload'
 
@@ -20,10 +17,8 @@ interface Props {
   /** Above-the-fold images shouldn't lazy-load; they're what the visitor came for. */
   loading?: 'lazy' | 'eager'
   /**
-   * The `sizes` attribute: how wide this image renders at each breakpoint. Only the
-   * caller knows — the same Figure sits full-bleed in one block and in a half-width
-   * column in another. Getting it wrong wastes bandwidth rather than breaking layout,
-   * so the default assumes the widest common case.
+   * How wide this image renders at each breakpoint — only the caller knows. Getting
+   * it wrong wastes bandwidth rather than breaking layout.
    */
   sizes?: string
   class?: string
@@ -43,10 +38,8 @@ const {
 const isExternal = /^https?:\/\//i.test(linkUrl ?? '')
 
 /**
- * Built once and spread into both branches below. Astro has no tidy way to wrap an
- * element conditionally, so the <img> is written twice — and when it was, the two
- * copies immediately drifted, leaving unlinked images with no srcset at all. One
- * object makes that impossible.
+ * Built once and spread into both branches below, so the linked and unlinked <img>
+ * can't drift apart.
  */
 const imgProps = {
   src: image.url,

@@ -20,9 +20,7 @@ html {
   text-size-adjust: 100%;
   scroll-behavior: smooth;
   background-color: var(--color-bg);
-  /* Keep UA-rendered chrome (scrollbars, form controls) in step with the theme.
-     Driven by each theme's own --theme-scheme so adding a theme needs no change
-     here. */
+  /* Keeps UA chrome (scrollbars, form controls) in step with the theme. */
   color-scheme: var(--theme-scheme, light);
 }
 
@@ -156,6 +154,11 @@ select {
   border-width: 0;
 }
 
+/* showModal() puts a dialog in the top layer but doesn't lock the page behind it. */
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
 /* ==========================================================================
    Monospace & Code
    ========================================================================== */
@@ -178,9 +181,8 @@ code {
    Utilities
    ========================================================================== */
 
-/* Chimera Display accent — for short ceremonial strings like "2027".
-   Weight 400 only: the family ships a single face, so any other weight would be
-   synthesized by the browser. Never use for headings or running text. */
+/* Weight 400 only: the family ships a single face, so any other weight would be
+   synthesized by the browser. Short ceremonial strings only. */
 .u-display {
   font-family: var(--font-display);
   font-weight: 400;

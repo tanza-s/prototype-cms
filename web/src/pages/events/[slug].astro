@@ -6,14 +6,9 @@ import { formatEventScheduleParts, toDateTimeAttr } from "../../lib/dates";
 import { truncateAtWord } from "../../lib/richtext";
 
 /**
- * Prerendered. Production is plain HTML on disk: no server to run, and a CMS
- * outage can't take the public site down. Content changes reach the site through
- * a rebuild, not a request.
- *
- * This used to read `import.meta.env.PROD`, on the theory that dev would render
- * on demand and stay live against the CMS. It never did — Astro needs the value
- * to be statically analyzable, and with no adapter configured there is nothing
- * that could render on demand, so it prerendered in dev too.
+ * Prerendered in dev as well as production. Astro needs this value to be statically
+ * analyzable, and with no adapter configured nothing *could* render on demand — so
+ * don't make it conditional; it won't do what it looks like it does.
  */
 export const prerender = true;
 
@@ -32,15 +27,12 @@ interface Props {
 }
 
 /**
- * In dev, refetch instead of trusting the prop.
- *
- * Astro caches getStaticPaths for the dev server's lifetime, so its props go stale
- * as soon as anyone edits in the CMS. The component body re-runs per request, so
- * fetching here is what makes edits appear on refresh. The build still uses the
- * prop, keeping it to one request total.
+ * In dev, refetch instead of trusting the prop: Astro caches getStaticPaths for the
+ * dev server's lifetime, so its props go stale as soon as anyone edits in the CMS.
+ * The build still uses the prop, keeping it to one request total.
  *
  * The route *list* stays cached, so a newly published event 404s until the dev
- * server restarts. Fixing that needs an adapter; see web/CLAUDE.md.
+ * server restarts.
  */
 let event = import.meta.env.DEV ? undefined : Astro.props.event;
 if (!event) {
@@ -162,10 +154,8 @@ const metaDescription = event.excerpt
     gap: var(--space-8);
   }
 
-  /* A portrait poster leaves a tall empty gutter beside it, so the meta moves up
-     into that space. Landscape art already fills the width, and keeps the
-     stacked layout. Below 768px both orientations stack — there's no room to put
-     anything beside the image. */
+  /* A portrait poster leaves a tall gutter beside it, so the meta moves up into
+     that space. Landscape art already fills the width and stays stacked. */
   @media (min-width: 768px) {
     .event__content--portrait {
       grid-template-columns: minmax(0, 2fr) minmax(0, 2fr);
@@ -173,8 +163,8 @@ const metaDescription = event.excerpt
       gap: var(--space-10);
     }
 
-    /* .event__meta's auto-fit would still try to sit Date and Location side by
-       side; in the narrower side column they should read as one per row. */
+    /* auto-fit would still sit Date and Location side by side; in the narrower
+       side column they should read one per row. */
     .event__content--portrait .event__meta {
       grid-template-columns: 1fr;
       gap: var(--space-6);
@@ -222,9 +212,8 @@ const metaDescription = event.excerpt
     color: var(--color-text);
   }
 
-  /* Date on one line, hours on the next. Grid rather than block spans so the two
-     lines share one gap value and the <time> element still reads as a single
-     unit to assistive tech. */
+  /* Grid rather than block spans, so the <time> still reads as one unit to
+     assistive tech. */
   .event__schedule {
     display: grid;
     gap: var(--space-1);
@@ -234,9 +223,8 @@ const metaDescription = event.excerpt
     color: var(--color-text-muted);
   }
 
-  /* The button is a direct child of .event__meta's grid, and grid items stretch
-     to fill their track by default — which is what was making it tall. Pinning
-     both axes to `start` lets it size to its own content instead. */
+  /* Grid items stretch to fill their track, so pin both axes to `start` and let
+     the button size to its own content. */
   .event__rsvp {
     align-self: start;
     justify-self: start;

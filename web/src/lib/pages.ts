@@ -14,8 +14,8 @@ import type {
   ContentWidth,
   EmbedBlock,
   GalleryBlock,
-  GalleryImage,
   GalleryColumns,
+  GalleryImage,
   GalleryTileShape,
   HeroBlock,
   HeroStyle,
@@ -132,12 +132,9 @@ interface PageResponse {
 }
 
 /**
- * Narrow a CMS select to a value the stylesheets actually have rules for.
- *
- * One generic rather than five near-identical mapX functions. The arrays below are
- * the single place each union's runtime values live, so an option added in the CMS
- * without matching CSS lands on the fallback instead of emitting a dead class like
- * `hero--undefined`. Same defensive intent as mapImageOrientation in ./api.ts.
+ * Narrow a CMS select to a value the stylesheets have rules for, so an option added
+ * in the CMS without matching CSS lands on the fallback rather than emitting a dead
+ * class like `hero--undefined`.
  */
 function oneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
   return typeof value === 'string' && (allowed as readonly string[]).includes(value)
@@ -158,19 +155,14 @@ const GALLERY_TILE_SHAPES: readonly GalleryTileShape[] = [
   'natural',
 ]
 
-/**
- * Collapse absent, null, and whitespace-only strings into one representation, so a
- * component can test `caption` rather than `caption && caption.trim()`.
- */
+/** Collapse absent, null, and whitespace-only strings into one representation. */
 function text(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
 /**
- * Drop half-filled rows: a link with no label or no usable destination can't be
- * rendered. safeHref rejects anything that isn't http(s)/mailto/tel or a relative
- * path, so an editor can't put `javascript:` into an href — the same check the links
- * inside rich text already get.
+ * Drop half-filled rows. safeHref rejects anything that isn't http(s)/mailto/tel or
+ * a relative path, so an editor can't put `javascript:` into an href.
  */
 function mapLinks(links: LinkResponse[] | null | undefined): PageLink[] {
   if (!Array.isArray(links)) return []
@@ -184,12 +176,9 @@ function mapLinks(links: LinkResponse[] | null | undefined): PageLink[] {
 }
 
 /**
- * Returns null for a block that can't be rendered, and the caller drops it.
- *
- * Two cases reach that: an unrecognised `blockType` — a block added in the CMS before
- * its component exists should degrade quietly rather than throw mid-build — and an
- * image block whose upload didn't resolve, which has nothing left to show. A media
- * block that loses its image still has its copy, so that one survives.
+ * Returns null for a block that can't be rendered, and the caller drops it: an
+ * unrecognised `blockType` (a CMS block whose component doesn't exist yet should
+ * degrade quietly rather than throw mid-build), or a block left with nothing to show.
  */
 function mapBlock(block: BlockResponse): PageBlock | null {
   switch (block.blockType) {
@@ -255,8 +244,7 @@ function mapBlock(block: BlockResponse): PageBlock | null {
     }
 
     case 'embed': {
-      // Unpopulated (a bare ID) or deleted since the page was saved. Either way
-      // there's no HTML to render, so drop the block rather than emit an empty region.
+      // Unpopulated (a bare ID) or deleted since the page was saved.
       const source = block.embed
       if (!source || typeof source !== 'object') return null
 
@@ -276,8 +264,6 @@ function mapBlock(block: BlockResponse): PageBlock | null {
     }
 
     case 'gallery': {
-      // Same reduce/drop pattern as mapLinks: a row whose upload was deleted has nothing
-      // to show, and a gallery with no surviving rows is an empty region — drop both.
       const rows = Array.isArray(block.images) ? block.images : []
       const images = rows.reduce<GalleryImage[]>((acc, row) => {
         const image = mapImage(row?.image, row?.altText)
@@ -307,11 +293,8 @@ function mapBlock(block: BlockResponse): PageBlock | null {
 }
 
 /**
- * Fall back to the page's own copy when an editor left the meta description blank.
- *
- * Walks the layout in order and takes the first block carrying prose, so the summary
- * comes from the top of the page rather than wherever the first `content` block
- * happens to sit.
+ * Fall back to the page's own copy when the meta description is blank. Walks the
+ * layout in order, so the summary comes from the top of the page.
  */
 function deriveDescription(layout: BlockResponse[]): string {
   for (const block of layout) {
@@ -324,6 +307,9 @@ function deriveDescription(layout: BlockResponse[]): string {
       case 'content':
       case 'mediaWithContent':
         flattened = lexicalToPlainText(block.content)
+        break
+      case 'gallery':
+        flattened = lexicalToPlainText(block.description)
         break
       case 'callToAction':
         // Already plain text — it's a textarea, not rich text.
@@ -345,7 +331,6 @@ function mapPage(page: PageResponse): Page {
     // The CMS hook fills this on save; the fallback only guards rows that predate it.
     slug: text(page.slug) ?? slugify(page.title),
     title: page.title,
-    // Resolved here so nothing downstream branches on empty meta.
     meta: {
       title: text(page.meta?.metaTitle) ?? page.title,
       description: text(page.meta?.metaDescription) ?? deriveDescription(layout),
@@ -357,9 +342,8 @@ function mapPage(page: PageResponse): Page {
 /**
  * Fetch every published page. Returns [] and logs on failure — see ./cms.ts.
  *
- * The `_status` filter is belt-and-braces: readPublishedOnly in the CMS collection is
- * the real guard, but stating it here means the query still says what it means if
- * access control is ever loosened.
+ * The `_status` filter is belt-and-braces; readPublishedOnly in the CMS collection is
+ * the real guard.
  */
 export async function fetchPages(): Promise<Page[]> {
   const docs = await fetchAll<PageResponse>('pages', {

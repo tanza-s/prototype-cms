@@ -7,8 +7,7 @@
      Roboto Mono      --font-mono     dates, times, code
    ========================================================================== */
 
-/* Chimera Display — ceremonial accent face. Single 400 weight; low legibility,
-   so reserve it for short strings like "2027" via the .u-display utility. */
+/* Chimera Display — ceremonial accent face; see --font-display in themes.css. */
 @font-face {
   font-family: "Chimera Display";
   src: url("/fonts/ChimeraDisplay-Regular.woff2") format("woff2");

@@ -2,8 +2,7 @@
 // collection, and how to turn an upload into something renderable.
 //
 // Collection-specific response shapes and mappers live next to their consumer
-// (./api.ts for events, ./pages.ts for pages). This file knows nothing about
-// either — it only knows how to talk to Payload.
+// (./api.ts for events, ./pages.ts for pages).
 
 import type { MediaImage } from '../types/payload'
 
@@ -12,13 +11,9 @@ export const CMS_URL = import.meta.env.PUBLIC_CMS_URL || 'http://localhost:3000'
 /** Payload's REST default is 10 docs per page, so paginate explicitly. */
 const PAGE_SIZE = 100
 
-/** Generous enough for a cold Payload dev server, short enough to not look hung. */
 export const REQUEST_TIMEOUT_MS = 30_000
 
-/**
- * Runaway guard. At PAGE_SIZE=100 this is 10,000 docs — far past anything this site
- * will hold, but it means a misbehaving `hasNextPage` can't spin the build forever.
- */
+/** Runaway guard: a misbehaving `hasNextPage` can't spin the build forever. */
 const MAX_PAGES = 100
 
 /**
@@ -30,12 +25,11 @@ export function slugify(text: string): string {
   return text
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
 }
 
-/** One generated rendition, as it appears under a media document's `sizes`. */
 interface MediaSizeResponse {
   url?: string | null
   width?: number | null
@@ -62,13 +56,11 @@ interface PaginatedResponse<T> {
 /**
  * Resolve a populated upload into an absolute URL plus alt text.
  *
- * Returns null when the relation is unpopulated (a bare ID, which is a number under
- * the Postgres adapter and a string under Mongo), missing, or points at a document
- * that no longer has a file — a deleted media doc leaves a dangling reference that
- * `required: true` in the CMS does nothing to prevent.
+ * Returns null when the relation is unpopulated (a bare ID), missing, or points at a
+ * document that no longer has a file — a deleted media doc leaves a dangling
+ * reference that `required: true` in the CMS does nothing to prevent.
  *
- * `altOverride` is for blocks that let an editor re-caption a shared image per
- * context; resolving it here means components only ever read `image.alt`.
+ * `altOverride` is resolved here so components only ever read `image.alt`.
  */
 export function mapImage(
   image: MediaResponse | number | string | null | undefined,
@@ -79,15 +71,11 @@ export function mapImage(
   const renditions = collectRenditions(image.sizes)
 
   return {
-    // Prefer a mid-size rendition over the original. Every existing `<img src>` on
-    // the site therefore gets the smaller file for free, and a browser that ignores
-    // srcset never falls back to a multi-megabyte original.
     url: pickDefault(renditions) ?? absoluteUrl(image.url),
     alt: altOverride?.trim() || image.alt || '',
     srcset: renditions.map(({ url, width }) => `${url} ${width}w`).join(', '),
-    // From the ORIGINAL, not the rendition: these exist to fix the aspect ratio so
-    // the layout doesn't shift while the image loads, and the ratio is the same
-    // whichever rendition the browser picks.
+    // From the ORIGINAL, not the rendition: these fix the aspect ratio so the layout
+    // doesn't shift while the image loads, and the ratio is the same either way.
     width: image.width ?? null,
     height: image.height ?? null,
   }
@@ -103,8 +91,7 @@ function absoluteUrl(url: string): string {
  *
  * Deduplication is required, not tidiness: `withoutEnlargement: true` makes every
  * size larger than the original return the original's width, so a 640px upload
- * yields medium and large both at 640w. Repeating a width in a srcset gives the
- * browser two indistinguishable candidates for the same slot.
+ * yields medium and large both at 640w — two indistinguishable srcset candidates.
  */
 function collectRenditions(
   sizes: MediaResponse['sizes'],
@@ -123,8 +110,7 @@ function collectRenditions(
 
 /**
  * The `src` fallback: the narrowest rendition at least 1200px wide, or the widest
- * available when the original was smaller than that. Wide enough for a full-width
- * block on a normal display, and never the unoptimised original.
+ * available when the original was smaller. Never the unoptimised original.
  */
 function pickDefault(renditions: Array<{ url: string; width: number }>): string | null {
   if (!renditions.length) return null
@@ -132,10 +118,6 @@ function pickDefault(renditions: Array<{ url: string; width: number }>): string 
   return (preferred ?? renditions[renditions.length - 1]).url
 }
 
-/**
- * One page of paginated *results* — not a document from the Pages collection.
- * Private; callers use fetchAll, which drives the pagination for them.
- */
 async function fetchResultPage<T>(
   collection: string,
   params: Record<string, string>,
@@ -151,8 +133,7 @@ async function fetchResultPage<T>(
 
   // Without a timeout a stalled CMS hangs the build indefinitely rather than
   // failing — a Payload dev server sitting on an interactive schema-push prompt
-  // accepts the connection and simply never answers. fetchAll already treats a
-  // failure as "no documents", so timing out degrades instead of hanging.
+  // accepts the connection and simply never answers.
   const response = await fetch(`${CMS_URL}/api/${collection}?${query}`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
@@ -171,10 +152,9 @@ async function fetchResultPage<T>(
 /**
  * Fetch every document in a collection, following pagination to the end.
  *
- * Returns [] and logs on failure so a CMS outage doesn't fail the whole build. That
- * is all-or-nothing on purpose: a partial list would render as a complete one, and a
- * page quietly missing half its content is harder to notice than a page missing all
- * of it.
+ * Returns [] and logs on failure so a CMS outage doesn't fail the build. All-or-
+ * nothing on purpose: a partial list would render as a complete one, and a page
+ * quietly missing half its content is harder to notice than one missing all of it.
  */
 export async function fetchAll<T>(
   collection: string,

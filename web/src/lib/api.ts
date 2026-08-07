@@ -28,21 +28,17 @@ function mapBentoSize(value: EventResponse['bentoSize']): BentoOverride {
 }
 
 /**
- * Narrow to the two orientations the stylesheet has rules for. Anything else —
- * a null from a row predating the column, or a value added to the CMS select
- * without matching CSS — lands on 'landscape' rather than producing a class
- * like `event__hero--undefined` that silently matches nothing.
+ * Narrow to the two orientations the stylesheet has rules for, so an unexpected
+ * value lands on 'landscape' rather than emitting a dead `--undefined` class.
  */
 function mapImageOrientation(value: EventResponse['imageOrientation']): ImageOrientation {
   return value === 'portrait' ? 'portrait' : 'landscape'
 }
 
 /**
- * Resolve the stored schedule into plain day/time strings.
- *
- * Day and time fields get opposite timezone treatment — see the header of
- * ./dates.ts. Doing it here means nothing downstream of this function handles a
- * timezone, or even sees a Date.
+ * Resolve the stored schedule into plain day/time strings. Day and time fields get
+ * opposite timezone treatment — see the header of ./dates.ts. Nothing downstream
+ * of here handles a timezone, or even sees a Date.
  */
 function mapSchedule(event: EventResponse) {
   const startDate = instantToCalendarDay(event.startDate)
@@ -52,8 +48,8 @@ function mapSchedule(event: EventResponse) {
   return {
     // startDate is required in the CMS; the fallback only guards malformed data.
     startDate: startDate ?? '',
-    // Collapse an end date equal to the start into null, so "single day" has
-    // exactly one representation downstream instead of two.
+    // Collapse an end date equal to the start into null, so "single day" has one
+    // representation downstream instead of two.
     endDate: endDate && endDate !== startDate ? endDate : null,
     allDay,
     // An all-day event has no meaningful clock time. The CMS hides the fields
@@ -80,10 +76,7 @@ function mapEvent(event: EventResponse): Event {
   }
 }
 
-/**
- * Fetch every published event, sorted by start date.
- * Returns [] and logs on failure so a CMS outage doesn't fail the whole build.
- */
+/** Fetch every published event. Returns [] and logs on failure — see ./cms.ts. */
 export async function fetchEvents(): Promise<Event[]> {
   const docs = await fetchAll<EventResponse>('events', {
     'where[published][equals]': 'true',

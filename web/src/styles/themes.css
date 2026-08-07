@@ -10,10 +10,8 @@
 }
 
 :root {
-  /* Typography — Font Families (four-font system)
-     --font-display is a ceremonial accent face: single 400 weight and hard to
-     read at length. Use it sparingly on short strings ("2027") via .u-display,
-     never for headings or body copy. */
+  /* --font-display is a ceremonial accent face: single 400 weight and hard to
+     read at length. Short strings only, via .u-display. */
   --font-display: "Chimera Display", Georgia, "Times New Roman", serif;
   --font-heading: "Merriweather", Georgia, "Times New Roman", serif;
   --font-body: "Lineto Brown", "Helvetica Neue", Helvetica, Arial, sans-serif;

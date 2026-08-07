@@ -1,7 +1,6 @@
 ---
-// The workhorse block: rich text at one of three measures.
-//
-// Owns only its width and vertical rhythm; Prose owns how the text itself looks.
+// Rich text at one of three measures. Owns only width and vertical rhythm; Prose
+// owns how the text itself looks.
 
 import type { ContentBlock } from '../../types/payload'
 import Prose from '../Prose.astro'
@@ -24,11 +23,8 @@ const { block, class: className } = Astro.props
 }
 
 <style>
-  /*
-   * The width variants set a custom property that one rule consumes, rather than
-   * each modifier restating max-width. Adding a fourth measure is then one line,
-   * and the padding/centering can't drift between variants.
-   */
+  /* Variants set a custom property one rule consumes, so padding and centring
+     can't drift between them. */
   .content-block {
     max-width: var(--content-measure);
     margin-inline: auto;
@@ -36,7 +32,6 @@ const { block, class: className } = Astro.props
     padding-inline: var(--grid-gutter);
   }
 
-  /* Prose wants a readable measure, so this is the default an editor should reach for. */
   .content-block--narrow {
     --content-measure: var(--container-narrow);
   }
@@ -45,11 +40,7 @@ const { block, class: className } = Astro.props
     --content-measure: var(--container-max);
   }
 
-  /*
-   * Full keeps the gutter. Text running to a 1600px viewport edge is unreadable,
-   * so "full bleed" here means unbounded, not unpadded — the blocks that genuinely
-   * touch the edge are the image ones.
-   */
+  /* "Full" here means unbounded, not unpadded — text keeps its gutter. */
   .content-block--full {
     --content-measure: none;
   }

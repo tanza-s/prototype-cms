@@ -6,17 +6,9 @@ import BlockRenderer from "../components/blocks/BlockRenderer.astro";
 
 
 /**
- * Prerendered. Production is plain HTML on disk: no server to run, and a CMS
- * outage can't take the public site down. Content changes reach the site through
- * a rebuild, not a request.
- *
- * This used to read `import.meta.env.PROD`, on the theory that dev would render
- * on demand and stay live against the CMS. It never did. Astro needs this value
- * to be statically analyzable, and with no adapter configured there is nothing
- * that *could* render on demand — so it silently prerendered in dev too, and
- * getStaticPaths results were cached for the life of the dev server. The result
- * was editors' changes not appearing for days. Stating it plainly is honest about
- * what actually happens.
+ * Prerendered in dev as well as production. Astro needs this value to be statically
+ * analyzable, and with no adapter configured nothing *could* render on demand — so
+ * don't make it conditional; it won't do what it looks like it does.
  */
 export const prerender = true;
 
@@ -35,15 +27,12 @@ interface Props {
 }
 
 /**
- * In dev, refetch instead of trusting the prop.
+ * In dev, refetch instead of trusting the prop: Astro caches getStaticPaths for the
+ * dev server's lifetime, so its props go stale as soon as anyone edits in the CMS.
+ * The build still uses the prop, keeping it to one request total.
  *
- * Astro caches getStaticPaths for the dev server's lifetime, so the props it
- * carries go stale the moment anyone edits in the CMS. The component body, by
- * contrast, re-runs on every request — so fetching here is what makes edits show
- * up on refresh. The build still uses the prop, keeping it to one request total.
- *
- * The route *list* is still cached, so a newly created page 404s until the dev
- * server restarts. Fixing that needs an adapter; see web/CLAUDE.md.
+ * The route *list* stays cached, so a newly created page 404s until the dev server
+ * restarts.
  */
 let page = import.meta.env.DEV ? undefined : Astro.props.page;
 if (!page) {
@@ -53,9 +42,8 @@ if (!page) {
 if (!page) {
   return new Response(null, { status: 404, statusText: "Page not found" });
 }
-// Unlike events, no truncation is needed here: lib/pages.ts already resolves
-// meta.description, falling back to the first prose block and cutting it on a word
-// boundary. The remaining fallback is for a page built entirely from images.
+// lib/pages.ts already resolves and truncates meta.description; this fallback is
+// for a page built entirely from images.
 const metaDescription =
   page.meta.description || `${page.title} — 2027 CCA Commencement`;
 ---

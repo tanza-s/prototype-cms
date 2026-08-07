@@ -21,7 +21,7 @@ const { block, class: className } = Astro.props
 /**
  * Tile width per column count, mirroring the CSS below: the 1400px container split
  * n ways above the breakpoint, half the viewport below it (the grid is always 2-up
- * on mobile). Overstating these is the usual way srcset stops saving anything.
+ * on mobile). Overstating these is how srcset stops saving anything.
  */
 const TILE_SIZES: Record<GalleryColumns, string> = {
   '2': '(min-width: 768px) 700px, 50vw',
@@ -47,7 +47,7 @@ const opens = block.enableSlideshow
 >
   <div class:list={['gallery-block__inner', className]}>
     {block.title && <h2 class="gallery-block__title">{block.title}</h2>}
-    <Prose html={block.description} class="gallery-block__description" />
+    <Prose html={block.description} />
 
     <ul class="gallery-block__grid">
       {block.images.map((item, i) => {
@@ -74,7 +74,7 @@ const opens = block.enableSlideshow
               ) : (
                 img
               )}
-              {block.showCaptionsInGrid && item.caption &&  (
+              {block.showCaptionsInGrid && item.caption && (
                 <figcaption class="gallery-block__caption" set:html={item.caption} />
               )}
             </figure>
@@ -84,18 +84,26 @@ const opens = block.enableSlideshow
     </ul>
   </div>
 
-   {opens && (
+  {opens && (
     <dialog class="gallery-block__dialog" data-gallery-dialog aria-label={block.title ?? 'Gallery'}>
-      <div class="gallery-block__viewer">
-        <button type="button" class="gallery-block__control gallery-block__control--close"
-          data-gallery-close aria-label="Close gallery">
-            <XIcon class:list={['gallery-block__close']} />
-          </button>
+      <div class="gallery-block__viewer" data-gallery-viewer>
+        <button
+          type="button"
+          class="gallery-block__control gallery-block__control--close"
+          data-gallery-close
+          aria-label="Close gallery"
+        >
+          <XIcon class="gallery-block__close" />
+        </button>
 
-        <button type="button" class="gallery-block__control gallery-block__control--prev"
-          data-gallery-prev aria-label="Previous image">
-            <ArrowSimple class:list={['gallery-block__arrow', 'gallery-block__arrow--prev']} />
-          </button>
+        <button
+          type="button"
+          class="gallery-block__control gallery-block__control--prev"
+          data-gallery-prev
+          aria-label="Previous image"
+        >
+          <ArrowSimple class="gallery-block__arrow gallery-block__arrow--prev" />
+        </button>
 
         <div class="gallery-block__stage">
           {block.images.map((item, i) => (
@@ -116,9 +124,13 @@ const opens = block.enableSlideshow
           ))}
         </div>
 
-        <button type="button" class="gallery-block__control gallery-block__control--next"
-          data-gallery-next aria-label="Next image">
-            <ArrowSimple class:list={['gallery-block__arrow', 'gallery-block__arrow--next']} />
+        <button
+          type="button"
+          class="gallery-block__control gallery-block__control--next"
+          data-gallery-next
+          aria-label="Next image"
+        >
+          <ArrowSimple class="gallery-block__arrow gallery-block__arrow--next" />
         </button>
 
         <p class="gallery-block__counter" data-gallery-counter aria-live="polite">
@@ -130,176 +142,185 @@ const opens = block.enableSlideshow
 </section>
 
 <style>
-    .gallery-block {
-  max-width: var(--container-max);
-  margin-inline: auto;
-  padding-block: var(--space-12);
-  padding-inline: var(--grid-gutter);
-}
-
-.gallery-block__title { margin: 0 0 var(--space-4); }
-
-.gallery-block__grid {
-  display: grid;
-  /* Always 2-up on mobile, whatever the editor chose — see TILE_SIZES. */
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
-  align-items: start; /* keeps "natural" tiles from stretching to the row height */
-  margin-block-start: var(--space-8);
-  padding: 0;
-  list-style: none;
-}
-
-.gallery-block__figure { margin: 0; }
-
-.gallery-block__link {
-  display: block;
-  background-image: none; /* opt out of the global animated link underline */
-}
-
-.gallery-block__item img {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: var(--gallery-aspect, auto);
-  object-fit: cover;
-  border-radius: 2px;
-  transition: transform var(--duration-slow) var(--ease-out-expo);
-}
-
-/* The crop presets. "natural" is `auto`, which makes object-fit a no-op. */
-.gallery-block--square       { --gallery-aspect: 1; }
-.gallery-block--landscape  { --gallery-aspect: 4 / 3; }
-.gallery-block--portrait { --gallery-aspect: 3 / 4; }
-.gallery-block--natural      { --gallery-aspect: auto; }
-
-/* Overflow lives on the figure so the scale-up is clipped to the tile. */
-.gallery-block__figure { overflow: hidden; }
-.gallery-block__link:hover img { transform: scale(1.04); }
-
-.gallery-block--feature .gallery-block__item:first-child { grid-column: 1 / -1; }
-/* A full-width tile wants widescreen — except in "natural", where cropping is the
-   one thing the editor asked us not to do. */
-.gallery-block--feature:not(.gallery-block--natural) .gallery-block__item:first-child {
-  --gallery-aspect: 16 / 9;
-}
-
-/* set:html content carries no scope attribute, hence :global(). */
-.gallery-block__caption {
-  margin-block-start: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-.gallery-block__caption :global(p) { margin: 0; }
-.gallery-block__caption :global(p + p) { margin-block-start: var(--space-2); }
-
-@media (min-width: 768px) {
-  .gallery-block__grid {
-    grid-template-columns: repeat(var(--gallery-columns), minmax(0, 1fr));
+  .gallery-block {
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding-block: var(--space-12);
+    padding-inline: var(--grid-gutter);
   }
-}
 
-.gallery-block--cols-2 { --gallery-columns: 2; }
-.gallery-block--cols-3 { --gallery-columns: 3; }
-.gallery-block--cols-4 { --gallery-columns: 4; }
+  .gallery-block__title { margin: 0 0 var(--space-4); }
 
-@media (prefers-reduced-motion: reduce) {
-  .gallery-block__item img { transition: none; }
-  .gallery-block__link:hover img { transform: none; }
-}
+  .gallery-block__grid {
+    display: grid;
+    /* Always 2-up on mobile, whatever the editor chose — see TILE_SIZES. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    align-items: start; /* keeps "natural" tiles from stretching to the row height */
+    margin-block-start: var(--space-8);
+    padding: 0;
+    list-style: none;
+  }
 
-/* ---------------------------------------------------------------- slideshow */
+  .gallery-block__figure {
+    margin: 0;
+    overflow: hidden; /* clips the hover scale-up */
+  }
 
-.gallery-block__dialog {
-  width: 100vw;
-  max-width: 100vw;
-  height: 100dvh;
-  max-height: 100dvh;
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
+  .gallery-block__link {
+    display: block;
+    background-image: none; /* opt out of the global animated link underline */
+  }
 
-.gallery-block__dialog::backdrop {
-  background: rgb(0 0 0 / 0.92);
-}
+  .gallery-block__item img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--gallery-aspect, auto);
+    object-fit: cover;
+    border-radius: 2px;
+    transition: transform var(--duration-slow) var(--ease-out-expo);
+  }
 
-/* showModal() doesn't lock the page behind it. */
-:global(html:has(dialog[open])) { overflow: hidden; }
+  .gallery-block__link:hover img { transform: scale(1.04); }
 
-.gallery-block__viewer {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-2);
-  height: 100%;
-  padding: var(--space-4);
-}
+  /* "natural" is `auto`, which makes object-fit a no-op. */
+  .gallery-block--landscape { --gallery-aspect: 4 / 3; }
+  .gallery-block--square    { --gallery-aspect: 1; }
+  .gallery-block--portrait  { --gallery-aspect: 3 / 4; }
+  .gallery-block--natural   { --gallery-aspect: auto; }
 
-.gallery-block__stage { justify-self: center; max-width: 90vw; }
+  .gallery-block--cols-2 { --gallery-columns: 2; }
+  .gallery-block--cols-3 { --gallery-columns: 3; }
+  .gallery-block--cols-4 { --gallery-columns: 4; }
 
-.gallery-block__slide { margin: 0; }
+  .gallery-block--feature .gallery-block__item:first-child { grid-column: 1 / -1; }
 
-.gallery-block__slide img {
-  display: block;
-  max-width: 100%;
-  /* Room for the caption and the counter below. */
-  max-height: 78dvh;
-  width: auto;
-  height: auto;
-  margin-inline: auto;
-}
+  /* A full-width tile wants widescreen — but not in "natural", where the editor
+     asked for no cropping. */
+  .gallery-block--feature:not(.gallery-block--natural) .gallery-block__item:first-child {
+    --gallery-aspect: 16 / 9;
+  }
 
-.gallery-block__slide-caption {
-  margin-block-start: var(--space-3);
-  font-size: var(--text-sm);
-  color: var(--color-on-dark);
-}
-.gallery-block__slide-caption :global(p) { margin: 0; }
-.gallery-block__slide-caption :global(a) { color: var(--color-accent); }
+  /* set:html content carries no scope attribute, hence :global(). */
+  .gallery-block__caption {
+    margin-block-start: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
 
-.gallery-block__control {
-  background: none;
-  border: 0;
-  color: var(--color-on-dark);
-  font-size: var(--text-3xl);
-  line-height: 1;
-  padding: var(--space-3);
-  cursor: pointer;
-}
-.gallery-block__control:hover { color: var(--color-accent); }
-.gallery-block__control--close {
-  position: absolute;
-  inset-block-start: var(--space-4);
-  inset-inline-end: var(--space-4);
-}
+  .gallery-block__caption :global(p) { margin: 0; }
+  .gallery-block__caption :global(p + p) { margin-block-start: var(--space-2); }
 
-:global(.gallery-block__close) {
-  display: block;
-  width: 0.5em;
-  height: 0.5em;
-  color: var(--color-on-dark);
-}
+  @media (min-width: 768px) {
+    .gallery-block__grid {
+      grid-template-columns: repeat(var(--gallery-columns), minmax(0, 1fr));
+    }
+  }
 
-:global(.gallery-block__arrow) {
-  display: block;
-  width: 0.5em;
-  height: auto;
-  transition: all 0.3s ease-in;
-}
+  @media (prefers-reduced-motion: reduce) {
+    .gallery-block__item img { transition: none; }
+    .gallery-block__link:hover img { transform: none; }
+    :global(.gallery-block__arrow) { transition: none; }
+  }
 
-:global(.gallery-block__arrow--prev) { rotate: 90deg; }
+  /* -------------------------------------------------------------- slideshow */
 
-:global(.gallery-block__arrow--next) { rotate: 270deg; }
+  .gallery-block__dialog {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
 
-.gallery-block__counter {
-  grid-column: 1 / -1;
-  margin: 0;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  color: var(--color-on-dark);
-}
+  .gallery-block__dialog::backdrop {
+    background: rgb(0 0 0 / 0.92);
+  }
+
+  .gallery-block__viewer {
+    position: relative; /* anchors the close button */
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-2);
+    height: 100%;
+    padding: var(--space-4);
+  }
+
+  .gallery-block__stage {
+    justify-self: center;
+    max-width: 90vw;
+  }
+
+  .gallery-block__slide { margin: 0; }
+
+  .gallery-block__slide img {
+    display: block;
+    max-width: 100%;
+    /* Room for the caption and the counter below. */
+    max-height: 78dvh;
+    width: auto;
+    height: auto;
+    margin-inline: auto;
+  }
+
+  .gallery-block__slide-caption {
+    margin-block-start: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-on-dark);
+  }
+
+  .gallery-block__slide-caption :global(p) { margin: 0; }
+  .gallery-block__slide-caption :global(a) { color: var(--color-accent); }
+
+  .gallery-block__control {
+    background: none;
+    border: 0;
+    color: var(--color-on-dark);
+    font-size: var(--text-3xl);
+    line-height: 1;
+    padding: var(--space-3);
+    cursor: pointer;
+  }
+
+  .gallery-block__control:hover { color: var(--color-accent); }
+
+  .gallery-block__control--close {
+    position: absolute;
+    inset-block-start: var(--space-4);
+    inset-inline-end: var(--space-4);
+  }
+
+  /* The icons render in their own components' style scope, so a plain selector
+     written here compiles to one that matches nothing. */
+  :global(.gallery-block__close) {
+    display: block;
+    width: 0.5em;
+    height: 0.5em;
+    color: var(--color-on-dark);
+  }
+
+  :global(.gallery-block__arrow) {
+    display: block;
+    width: 0.5em;
+    height: auto;
+    transition: color 0.3s ease-in;
+  }
+
+  :global(.gallery-block__arrow--prev) { rotate: 90deg; }
+  :global(.gallery-block__arrow--next) { rotate: 270deg; }
+
+  .gallery-block__counter {
+    grid-column: 1 / -1;
+    margin: 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-on-dark);
+  }
 </style>
 
 <script>
@@ -323,7 +344,7 @@ const opens = block.enableSlideshow
     }
 
     root.querySelectorAll<HTMLAnchorElement>('[data-gallery-open]').forEach((link, i) => {
-      // Only now that the dialog is known to work does the link claim to open one.
+      // Only claim to open a dialog once one is known to work.
       link.setAttribute('aria-haspopup', 'dialog')
       link.addEventListener('click', (event) => {
         event.preventDefault()
@@ -336,10 +357,11 @@ const opens = block.enableSlideshow
     dialog.querySelector('[data-gallery-next]')?.addEventListener('click', () => show(index + 1))
     dialog.querySelector('[data-gallery-close]')?.addEventListener('click', () => dialog.close())
 
-    // Backdrop click. The dialog fills the viewport, so this fires only on padding
-    // that isn't covered by the viewer — target equality is what distinguishes them.
+    // Click-outside-to-close. The viewer covers the dialog, so testing the dialog
+    // alone never matches — the empty space around the image belongs to the viewer.
+    const viewer = dialog.querySelector('[data-gallery-viewer]')
     dialog.addEventListener('click', (event) => {
-      if (event.target === dialog) dialog.close()
+      if (event.target === dialog || event.target === viewer) dialog.close()
     })
 
     dialog.addEventListener('keydown', (event) => {

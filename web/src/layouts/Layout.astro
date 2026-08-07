@@ -25,13 +25,8 @@ const {
 } = Astro.props
 
 /**
- * Every published CMS page becomes a nav item, so a new page is reachable the moment
- * it's published without anyone editing this file. The cost is one Payload request
- * per rendered page — negligible at build time, and fetchPages already degrades to []
- * if the CMS is down, so the header just loses its links rather than failing.
- *
- * When the site outgrows "every page in the nav", this is the line to replace with a
- * curated list or a Payload global.
+ * Every published CMS page becomes a nav item. fetchPages degrades to [] if the CMS
+ * is down, so the header loses its links rather than failing the build.
  */
 const navPages = await fetchPages()
 

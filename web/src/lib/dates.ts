@@ -1,22 +1,17 @@
 // Shared event date/time handling.
 //
-// Events store a calendar day and a wall-clock time as separate fields, because
-// a multi-day exhibition's hours apply to every day in the run ("May 1–13, open
-// 12–3pm") rather than describing one continuous span.
+// Days and times need OPPOSITE timezone treatment, which is the one thing to know
+// here:
 //
-// Those two kinds of value need OPPOSITE timezone treatment, which is the single
-// most important thing in this file:
+//   * A calendar day is not an instant. Payload stores it at midnight, and reading
+//     `2027-05-01T00:00:00Z` in Pacific time yields April 30. Days are read and
+//     formatted in UTC, always.
+//   * A clock time IS an instant, recording what the editor typed, so it's read in
+//     the college's timezone.
 //
-//   * A calendar day is not an instant. Payload stores it at midnight, and
-//     reading `2027-05-01T00:00:00Z` in Pacific time yields April 30. Day values
-//     are therefore read and formatted in UTC, always.
-//   * A clock time IS an instant, recording what the editor typed. Those are
-//     read in the college's timezone, which is what recovers the intended
-//     reading.
-//
-// `instantToCalendarDay` / `instantToClockTime` apply those rules once, at the
-// API boundary. Everything after that point is plain 'YYYY-MM-DD' and 'HH:MM'
-// strings with no timezone semantics left in them.
+// instantToCalendarDay / instantToClockTime apply those rules once at the API
+// boundary; everything after is plain 'YYYY-MM-DD' and 'HH:MM' with no timezone
+// semantics left.
 
 const TIME_ZONE = import.meta.env.PUBLIC_EVENT_TIME_ZONE || 'America/Los_Angeles'
 
@@ -75,11 +70,8 @@ export function todayIso(now: Date = new Date()): string {
 // ---------------------------------------------------------------- display
 
 /**
- * 'YYYY-MM-DD' → a Date pinned to UTC noon.
- *
- * Noon rather than midnight purely as belt-and-braces: every formatter here is
- * UTC-pinned anyway, but noon means even an accidental local-time read lands on
- * the right day in any timezone on earth.
+ * 'YYYY-MM-DD' → a Date pinned to UTC noon. Noon, not midnight, so even an
+ * accidental local-time read lands on the right day in any timezone.
  */
 function dayToDate(day: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day)
@@ -151,10 +143,7 @@ function formatDayRange(start: string, end: string, long: boolean): string {
   return formatter.formatRange(a, b).replace(/\u2009/g, ' ')
 }
 
-/**
- * "12 PM", "12:30 PM" — the ":00" is dropped on the hour, since event hours are
- * usually whole hours and "12 – 3 PM" reads better than "12:00 – 3:00 PM".
- */
+/** "12 PM", "12:30 PM" — the ":00" is dropped on the hour. */
 export function formatTime(time: string): string {
   const parsed = parseClock(time)
   if (!parsed) return ''
@@ -197,14 +186,11 @@ function formatTimePart(event: EventSchedule, multiDay: boolean): string {
 }
 
 /**
- * The date and time halves of the label, kept apart.
+ * The date and time halves of the label, kept apart: the detail page stacks them,
+ * the cards join them with a middot.
  *
- * The detail page stacks them on separate lines; the cards join them with a
- * middot. Both read from this one place so the wording can't drift between them.
- *
- * `long` switches to the fuller wording used on the event detail page
- * ("Saturday, May 1, 2027" vs "May 1, 2027"). `time` is '' when the event has
- * nothing to say about its hours.
+ * `long` switches to the fuller detail-page wording ("Saturday, May 1, 2027" vs
+ * "May 1, 2027"). `time` is '' when the event says nothing about its hours.
  */
 export function formatEventScheduleParts(
   event: EventSchedule,
@@ -212,9 +198,8 @@ export function formatEventScheduleParts(
 ): { date: string; time: string } {
   const multiDay = Boolean(event.endDate && event.endDate !== event.startDate)
 
-  // Short month in the compact form so a single-day card ("Aug 1, 2026") and a
-  // multi-day one ("Aug 15 – 16, 2026") don't sit side by side in the same grid
-  // spelling the month two different ways.
+  // Short month in the compact form, so single-day and multi-day cards in the same
+  // grid don't spell the month two different ways.
   const date =
     multiDay ? formatDayRange(event.startDate, event.endDate!, long)
     : long ? formatWeekday(event.startDate)

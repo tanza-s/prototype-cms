@@ -1,17 +1,18 @@
 ---
 // Renders an editor's block sequence in order.
 //
-// Add additional blocks block by creating a Block file in cms/src/blocks/, a component here, a
-// mapBlock case in lib/pages.ts, a union member in types/payload.ts, and one line
-// in COMPONENTS below.
+// Adding a block: a Block file in cms/src/blocks/ registered in collections/Pages.ts,
+// a component here, a mapBlock case in lib/pages.ts, a union member in
+// types/payload.ts, and one line in COMPONENTS below. If it carries prose, also give
+// deriveDescription in lib/pages.ts a case so the page can fall back to it for meta.
 
 import type { PageBlock } from '../../types/payload'
 import CallToAction from './CallToAction.astro'
 import Content from './Content.astro'
 import Embed from './Embed.astro'
+import Gallery from './Gallery.astro'
 import Hero from './Hero.astro'
 import Image from './Image.astro'
-import Gallery from './Gallery.astro'
 import MediaWithContent from './MediaWithContent.astro'
 
 interface Props {
@@ -21,11 +22,9 @@ interface Props {
 const { blocks } = Astro.props
 
 /*
- * Typed loosely on purpose. With a precise `as const` map, TS infers `Component` as
- * a union of component functions and then can't prove `block` matches whichever one
- * the lookup selected — indexing doesn't narrow the two in parallel. The key type is
- * still PageBlock['blockType'], so forgetting to add a block here is a compile error;
- * only the props go unchecked.
+ * Values typed `any` on purpose: with a precise map TS can't prove `block` matches
+ * whichever component the lookup selected. The KEY type still catches a missing
+ * block at compile time — but not a wrong import, so check what you're importing.
  */
 const COMPONENTS: Record<PageBlock['blockType'], any> = {
   hero: Hero,

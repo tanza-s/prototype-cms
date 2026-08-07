@@ -38,11 +38,9 @@ export function escapeHtml(value: string): string {
 }
 
 /**
- * Only allow schemes that are safe to put in an href, so CMS content can't
- * smuggle in `javascript:` or a data URL.
- *
- * Exported because block link fields are editor-supplied URLs headed for an href
- * too — they need the same check the links inside rich text already get.
+ * Only allow schemes that are safe in an href, so CMS content can't smuggle in
+ * `javascript:` or a data URL. Exported because block link fields are editor-
+ * supplied URLs too and need the same check.
  */
 export function safeHref(url: unknown): string | null {
   if (typeof url !== 'string') return null
@@ -139,10 +137,7 @@ function renderNode(node: any): string {
   }
 }
 
-/**
- * Convert a Payload lexical richText value to an HTML string.
- * Accepts an already-plain string for convenience.
- */
+/** Payload lexical richText → HTML. Accepts an already-plain string too. */
 export function lexicalToHtml(richText: unknown): string {
   if (!richText) return ''
   if (typeof richText === 'string') return richText
@@ -180,10 +175,7 @@ export function lexicalToPlainText(richText: unknown): string {
   return walk((richText as any).root).replace(/\s+/g, ' ').trim()
 }
 
-/**
- * Truncate to a max length on a word boundary, adding an ellipsis.
- * Used for meta descriptions, where mid-word cuts read badly.
- */
+/** Truncate on a word boundary, adding an ellipsis. */
 export function truncateAtWord(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   const clipped = text.slice(0, maxLength - 1)

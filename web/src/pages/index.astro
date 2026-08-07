@@ -59,8 +59,8 @@ const events = await fetchEvents()
   </section>
 
   {/* Runs before the panels paint so a returning list-view visitor never sees
-      the grid flash first. Inline and unbundled by design — a deferred module
-      would land after first paint and defeat the point. */}
+      the grid flash. Inline and unbundled by design — a deferred module would
+      land after first paint and defeat the point. */}
   <script is:inline>
     ;(function () {
       try {
@@ -133,8 +133,7 @@ const events = await fetchEvents()
     margin: 0;
   }
 
-  /* List view: one full-width card per row, which is what EventCard's
-     horizontal layout (columns=1) is built for. */
+  /* One full-width card per row — EventCard's columns=1 layout. */
   .events__list {
     display: grid;
     grid-template-columns: 1fr;

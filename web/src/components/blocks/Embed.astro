@@ -1,21 +1,15 @@
 ---
 // Third-party embed — a mailing list signup, a form, a player.
 //
-// THIS IS THE ONE COMPONENT THAT RENDERS CMS CONTENT UNESCAPED.
+// THIS IS THE ONE COMPONENT THAT RENDERS CMS CONTENT UNESCAPED. Everywhere else,
+// content goes through lib/richtext.ts (escaped, scheme-checked) or safeHref.
 //
-// Everywhere else, content is sanitised before it gets here: ../Prose.astro receives
-// HTML that lib/richtext.ts escaped and scheme-checked, and every editor-supplied URL
-// went through safeHref. This block deliberately skips all of that, because a
-// provider's signup form can't be expressed as structured data.
+// set:html runs at BUILD time, so a <script> in the embed is written into the static
+// HTML and executes on page load — unlike client-side innerHTML, where injected
+// scripts stay inert. What makes that acceptable is access control, not sanitising:
+// cms/src/collections/Embeds.ts restricts authoring to admins.
 //
-// Note that set:html runs at BUILD time, so a <script> in the embed is written into
-// the static HTML and executes on page load — this is not client-side innerHTML,
-// where injected scripts stay inert. What makes that acceptable is access control,
-// not sanitising: cms/src/collections/Embeds.ts restricts authoring to admins, and
-// editors can only place embeds an admin already wrote.
-//
-// Do not route this through Prose. Prose exists to share the sanitised path, and
-// reusing it here would blur the one distinction worth keeping visible in the source.
+// Do not route this through Prose. Prose exists to share the sanitised path.
 
 import type { EmbedBlock } from '../../types/payload'
 
@@ -27,8 +21,8 @@ interface Props {
 
 const { block, class: className } = Astro.props
 
-// Prefer the per-placement heading; fall back to the embed's own name so the region
-// is still labelled for anyone navigating by landmark.
+// Fall back to the embed's own name so the region is still labelled for landmark
+// navigation.
 const label = block.heading ?? block.title
 ---
 
@@ -50,12 +44,10 @@ const label = block.heading ?? block.title
   }
 
   /*
-   * Provider markup arrives with its own styling assumptions and no knowledge of this
-   * site's tokens. These are damage control, not design: stop an embed overflowing its
-   * column or forcing a horizontal scrollbar on the whole page.
+   * Damage control, not design: stop provider markup overflowing its column.
    *
-   * :global because the content is injected by set:html and carries no scope attribute,
-   * so a plain descendant selector compiles to something that matches nothing.
+   * :global because set:html content carries no scope attribute, so a plain
+   * descendant selector compiles to something that matches nothing.
    */
   .embed-block__body :global(img),
   .embed-block__body :global(iframe) {

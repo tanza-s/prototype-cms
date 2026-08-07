@@ -1,16 +1,12 @@
-// Bento layout for the events grid.
-//
-// The 2026 site sized every tile from a hand-authored slug → size map, which can't
-// survive a CMS: new events silently fall back to the smallest tile and deletions
-// leave holes. Here the size is derived from the event's own content, so a tile
-// looks like it earned its space rather than having been assigned it at random.
+// Bento layout for the events grid: tile size is derived from each event's own
+// content rather than assigned.
 //
 // Two properties the rest of the site depends on:
 //   1. Stability — variation comes from a hash of the slug, never Math.random(),
 //      so identical content always produces an identical grid across rebuilds.
 //   2. Order — events read in date order, top-to-bottom. `grid-auto-flow: dense`
-//      alone would fill holes by reordering, which an events list can't afford, so
-//      sizes are chosen to fit the space instead of the space being rearranged.
+//      would fill holes by reordering, which an events list can't afford, so sizes
+//      are chosen to fit the space instead of the space being rearranged.
 
 import type { Event } from '../types/payload'
 import { todayIso } from './dates'
@@ -55,8 +51,7 @@ const ACCENTS = [
 ]
 
 /**
- * FNV-1a, 32-bit. Any stable string → int hash works; this one is short, has no
- * dependencies, and spreads similar slugs (`mfa-writing`, `mfa-design`) far apart,
+ * FNV-1a, 32-bit. Spreads similar slugs (`mfa-writing`, `mfa-design`) far apart,
  * which matters because neighbouring events often have near-identical titles.
  */
 function hash(value: string): number {
@@ -68,10 +63,7 @@ function hash(value: string): number {
   return h >>> 0
 }
 
-/**
- * How much space this event has earned. Signals are all things an editor already
- * fills in, so the resulting shape tracks the content instead of looking arbitrary.
- */
+/** How much space this event has earned, from signals an editor already fills in. */
 function weightFor(event: Event, rank: number, past: boolean): number {
   if (past) return 0
   if (event.bentoSize === 'feature') return 6
@@ -86,23 +78,17 @@ function weightFor(event: Event, rank: number, past: boolean): number {
 }
 
 /**
- * Sizes to try, best first. The packer walks this list and takes the first shape
- * that fits, so every entry after the first is a graceful downgrade. `compact`
- * ends every list because it fits anywhere — that's what guarantees termination.
- *
- * At equal weight the hash decides whether the event leans tall or wide, which is
- * where a run of similar events stops producing a run of identical tiles.
+ * Sizes to try, best first; the packer takes the first that fits. `compact` ends
+ * every list because it fits anywhere — that's what guarantees termination.
  */
 function preferencesFor(weight: number, seed: number): BentoSize[] {
   const leansWide = seed % 2 === 0
   if (weight >= 5) return ['large', 'tall', 'wide', 'compact']
-  // Always offer the other orientation before giving up on a double tile. A list
-  // of just ['wide', 'compact'] drops an event to 1x1 whenever the row has no
-  // horizontal room left, even when a tall tile would have slotted in beside it.
+  // Always offer the other orientation before giving up on a double tile: ['wide',
+  // 'compact'] alone drops an event to 1x1 whenever the row has no horizontal room,
+  // even when a tall tile would have fitted beside it.
   //
-  // Threshold 2, not 1: the +1 recency nudge must never be enough on its own. An
-  // event with no art, a short title and a single date has nothing to fill a
-  // double tile with, however soon it is.
+  // Threshold 2, not 1, so the +1 recency nudge is never enough on its own.
   if (weight >= 2) {
     return leansWide ? ['wide', 'tall', 'compact'] : ['tall', 'wide', 'compact']
   }
@@ -152,13 +138,11 @@ class Occupancy {
 /**
  * Assign a size to every event and pack them into a 4-column grid.
  *
- * Each event is placed at the first free cell, taking the first size from its
- * preference list that fits there. Because a placement never skips a cell, no
- * holes are ever created — which in turn means plain (non-dense) auto-flow in CSS
- * reproduces this layout exactly, with the original order intact.
+ * Each event goes at the first free cell, taking the first size from its preference
+ * list that fits. A placement never skips a cell, so no holes are created — which is
+ * what lets plain (non-dense) auto-flow in CSS reproduce this layout exactly.
  *
- * `now` is injectable so the past/upcoming split is deterministic in tests. Note
- * that in a static build "past" is frozen at build time and only moves on rebuild.
+ * In a static build "past" is frozen at build time and only moves on rebuild.
  */
 export function assignBentoLayout(events: Event[], now: Date = new Date()): BentoItem[] {
   const today = todayIso(now)

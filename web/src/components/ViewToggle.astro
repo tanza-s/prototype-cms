@@ -1,9 +1,7 @@
 ---
 /**
- * ViewToggle — GRID / LIST switch for the events section.
- *
- * Both views are rendered server-side and CSS hides the inactive one, so the
- * toggle is instant and every event stays in the HTML for crawlers either way.
+ * GRID / LIST switch for the events section. Both views render server-side and CSS
+ * hides the inactive one, so every event stays in the HTML for crawlers.
  *
  * Usage: put this inside an element carrying `data-view-group`, alongside two
  * children marked `data-view-panel="grid"` and `data-view-panel="list"`.
@@ -84,11 +82,8 @@ const { class: className } = Astro.props
   type View = 'grid' | 'list'
 
   /**
-   * `immediate` skips the scroll-reveal choreography. The panels start hidden,
-   * so their .reveal cards never intersect and sit at opacity 0 — fine on first
-   * load, where the observer catches them as you scroll, but wrong after a
-   * click: the user just asked to see this view and shouldn't have to scroll to
-   * make it materialise.
+   * `immediate` skips the scroll-reveal choreography. A hidden panel's .reveal cards
+   * never intersect, so after a click they would sit at opacity 0 until you scroll.
    */
   function apply(group: HTMLElement, view: View, immediate = false) {
     group.dataset.view = view
