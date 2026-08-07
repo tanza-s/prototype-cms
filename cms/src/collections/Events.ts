@@ -27,7 +27,7 @@ export const Events: CollectionConfig = {
     defaultColumns: ['title', 'startDate', 'endDate', 'location'],
   },
   access: {
-    read: () => true,
+    read: ({ req: { user } }) => (user ? true : { published: { equals: true } }),
   },
   fields: [
     {
@@ -46,12 +46,12 @@ export const Events: CollectionConfig = {
       },
       hooks: {
         beforeChange: [
-          ({ data, value }) => {
-            // Normalize an editor-supplied slug, otherwise derive one from the title.
+          ({ data, originalDoc, value }) => {
             if (typeof value === 'string' && value.trim()) return slugify(value)
-            if (data?.title) return slugify(data.title)
-            return value
-          },
+            const source = data?.title ?? originalDoc?.title
+            if (typeof source === 'string' && source.trim()) return slugify(source)
+            return originalDoc?.slug ?? value
+          }
         ],
       },
     },

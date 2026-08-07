@@ -133,12 +133,10 @@ const IMAGE_SIZES = '(min-width: 768px) 420px, 100vw'
     margin-bottom: var(--space-4);
   }
 
-  :global(.cta__link--image:hover) {
-    .cta__arrow {
-        transform: translateX(1em);
-        transition: transform 0.2s ease-in-out;
-    }
-  }
+:global(.cta__link--image:hover .cta__arrow) {
+  transform: translateX(1em);
+  transition: transform 0.2s ease-in-out;
+}
 
   :global(.cta__arrow--image) {
     width: 2em;

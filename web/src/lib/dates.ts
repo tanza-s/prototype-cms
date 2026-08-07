@@ -28,7 +28,7 @@ export interface EventSchedule {
 
 // ---------------------------------------------------------------- boundary
 
-/** Day values are formatted in UTC so midnight can't roll back a day. */
+/** Day formatter in the college's timezone, used by todayIso(). */
 const isoDayInZone = new Intl.DateTimeFormat('en-CA', {
   timeZone: TIME_ZONE,
   year: 'numeric',
