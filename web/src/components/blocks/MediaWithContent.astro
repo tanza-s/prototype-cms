@@ -1,0 +1,114 @@
+---
+// Two columns: media on one side, rich text on the other, side selectable per block.
+//
+// Media comes FIRST in the DOM and the flip is visual, via `order`. Reordering the
+// source would change reading and tab order to achieve a purely visual difference.
+
+import type { MediaWithContentBlock } from '../../types/payload'
+import Figure from '../Figure.astro'
+import Prose from '../Prose.astro'
+import ArrowSimple from '../arrows/ArrowSimple.astro'
+
+interface Props {
+  block: MediaWithContentBlock
+  /** Forwarded from the parent so reveal/stagger classes land on the root. */
+  class?: string
+}
+
+const { block, class: className } = Astro.props
+
+/** Half of the 1400px container above the breakpoint, full width below it. */
+const MEDIA_SIZES = '(min-width: 768px) 700px, 100vw'
+---
+
+<section
+  class:list={[
+    'media-with-content',
+    `media-with-content--${block.imageAlignment}`,
+    { 'media-with-content--no-media': !block.media },
+    className,
+  ]}
+>
+  {
+    block.media && (
+      <Figure
+        class="media-with-content__media"
+        image={block.media}
+        caption={block.caption}
+        linkUrl={block.linkUrl}
+        sizes={MEDIA_SIZES}
+      />
+    )
+  }
+
+  <div class="media-with-content__body">
+    <Prose html={block.content} />
+
+    {
+      block.callToAction.length > 0 && (
+        <ul class="media-with-content__links">
+          {block.callToAction.map((link) => (
+            <li>
+              <a
+                class="cta__link cta__link--simple"
+                href={link.url}
+                rel={
+                  /^https?:\/\//i.test(link.url) ? 'noopener noreferrer' : undefined
+                }
+              >
+                {link.label}
+                <ArrowSimple class="cta__arrow cta__arrow--basic" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .media-with-content {
+    display: grid;
+    gap: var(--space-6);
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding-block: var(--space-12);
+    padding-inline: var(--grid-gutter);
+  }
+
+  .media-with-content__body {
+    align-self: center;
+  }
+
+  .media-with-content__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-block-start: var(--space-6);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 768px) {
+    .media-with-content {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-10);
+    }
+
+    /*
+     * Moves the BODY forward rather than the media back — the only version that
+     * works, because <Figure> renders in its own style scope and a selector for
+     * `__media` written here never matches it. `__body` is a div this file owns.
+     */
+    .media-with-content--right .media-with-content__body {
+      order: -1;
+    }
+
+    /* No image, no second column to fill. Mirrors .event-card--no-image. */
+    .media-with-content--no-media {
+      grid-template-columns: minmax(0, var(--container-narrow));
+      justify-content: center;
+    }
+  }
+</style>

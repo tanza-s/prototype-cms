@@ -1,0 +1,62 @@
+---
+// A standalone image at one of three widths.
+//
+// Owns only its width and vertical rhythm; Figure owns the image, caption, and link.
+
+import type { ImageBlock } from '../../types/payload'
+import Figure from '../Figure.astro'
+
+interface Props {
+  block: ImageBlock
+  /** Forwarded from the parent so reveal/stagger classes land on the root. */
+  class?: string
+}
+
+const { block, class: className } = Astro.props
+
+// Mirrors the measures in the stylesheet below, so the browser picks a rendition
+// matching what it will actually paint rather than assuming full viewport width.
+const SIZES: Record<typeof block.size, string> = {
+  contained: '(min-width: 900px) 900px, 100vw',
+  wide: '(min-width: 1400px) 1400px, 100vw',
+  full: '100vw',
+}
+---
+
+<div class:list={['image-block', `image-block--${block.size}`, className]}>
+  <Figure
+    image={block.image}
+    caption={block.caption}
+    linkUrl={block.linkUrl}
+    sizes={SIZES[block.size]}
+  />
+</div>
+
+<style>
+  .image-block {
+    max-width: var(--image-measure);
+    margin-inline: auto;
+    padding-block: var(--space-12);
+    padding-inline: var(--image-gutter, var(--grid-gutter));
+  }
+
+  .image-block--contained {
+    --image-measure: var(--container-narrow);
+  }
+
+  .image-block--wide {
+    --image-measure: var(--container-max);
+  }
+
+  /*
+   * Unlike Content's "full", this one really does reach the viewport edge. The two
+   * custom properties cross into Figure's scope, where a descendant selector written
+   * here would not match.
+   */
+  .image-block--full {
+    --image-measure: none;
+    --image-gutter: 0;
+    --figure-radius: 0;
+    --figure-caption-inset: var(--grid-gutter);
+  }
+</style>

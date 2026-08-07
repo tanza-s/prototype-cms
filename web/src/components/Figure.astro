@@ -1,0 +1,100 @@
+---
+// A content image: optional caption, optional link.
+//
+// Only the <img> goes inside the anchor, never the <figcaption> — wrapping the whole
+// figure folds the caption into the link's accessible name.
+//
+// No opinion about width or position. Callers tune what varies through custom
+// properties, which cross Astro's style scoping where a descendant selector doesn't.
+
+import type { MediaImage } from '../types/payload'
+
+interface Props {
+  image: MediaImage
+  caption?: string | null
+  /** Wraps the image in a link. Already scheme-checked by safeHref in lib/pages.ts. */
+  linkUrl?: string | null
+  /** Above-the-fold images shouldn't lazy-load; they're what the visitor came for. */
+  loading?: 'lazy' | 'eager'
+  /**
+   * How wide this image renders at each breakpoint — only the caller knows. Getting
+   * it wrong wastes bandwidth rather than breaking layout.
+   */
+  sizes?: string
+  class?: string
+}
+
+const {
+  image,
+  caption = null,
+  linkUrl = null,
+  loading = 'lazy',
+  sizes = '100vw',
+  class: className,
+} = Astro.props
+
+// Only matters for links leaving the site. safeHref has already guaranteed this is
+// an absolute http(s) URL or a site-relative path, so the test is just origin.
+const isExternal = /^https?:\/\//i.test(linkUrl ?? '')
+
+/**
+ * Built once and spread into both branches below, so the linked and unlinked <img>
+ * can't drift apart.
+ */
+const imgProps = {
+  src: image.url,
+  // undefined rather than '' so the attribute is omitted entirely for an upload
+  // with no renditions, instead of emitting srcset="".
+  srcset: image.srcset || undefined,
+  sizes: image.srcset ? sizes : undefined,
+  width: image.width ?? undefined,
+  height: image.height ?? undefined,
+  alt: image.alt,
+  loading,
+}
+---
+
+<figure class:list={['figure', className]}>
+  {
+    linkUrl ? (
+      <a
+        class="figure__link"
+        href={linkUrl}
+        rel={isExternal ? 'noopener noreferrer' : undefined}
+      >
+        <img {...imgProps} />
+      </a>
+    ) : (
+      <img {...imgProps} />
+    )
+  }
+
+  {caption && <figcaption class="figure__caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .figure {
+    margin: 0; /* the UA stylesheet indents figures by 40px */
+  }
+
+  .figure img {
+    display: block; /* drop the inline-baseline gap under the image */
+    width: 100%;
+    height: auto;
+    /* Overridable because a full-bleed image shouldn't have rounded corners. */
+    border-radius: var(--figure-radius, var(--radius-card));
+  }
+
+  .figure__link {
+    display: block;
+    background-image: none; /* opt out of the animated link underline */
+  }
+
+  .figure__caption {
+    /* A bleeding image drops its gutter, so its caption re-adds one for itself. */
+    padding-inline: var(--figure-caption-inset, 0);
+    margin-block-start: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+</style>

@@ -1,0 +1,60 @@
+---
+// Third-party embed — a mailing list signup, a form, a player.
+//
+// THIS IS THE ONE COMPONENT THAT RENDERS CMS CONTENT UNESCAPED. Everywhere else,
+// content goes through lib/richtext.ts (escaped, scheme-checked) or safeHref.
+//
+// set:html runs at BUILD time, so a <script> in the embed is written into the static
+// HTML and executes on page load — unlike client-side innerHTML, where injected
+// scripts stay inert. What makes that acceptable is access control, not sanitising:
+// cms/src/collections/Embeds.ts restricts authoring to admins.
+//
+// Do not route this through Prose. Prose exists to share the sanitised path.
+
+import type { EmbedBlock } from '../../types/payload'
+
+interface Props {
+  block: EmbedBlock
+  /** Forwarded from the parent so reveal/stagger classes land on the root. */
+  class?: string
+}
+
+const { block, class: className } = Astro.props
+
+// Fall back to the embed's own name so the region is still labelled for landmark
+// navigation.
+const label = block.heading ?? block.title
+---
+
+<section class:list={['embed-block', className]} aria-label={label || undefined}>
+  {block.heading && <h2 class="embed-block__heading">{block.heading}</h2>}
+  <div class="embed-block__body" set:html={block.html} />
+</section>
+
+<style>
+  .embed-block {
+    max-width: var(--container-narrow);
+    margin-inline: auto;
+    padding-block: var(--space-12);
+    padding-inline: var(--grid-gutter);
+  }
+
+  .embed-block__heading {
+    margin: 0 0 var(--space-6);
+  }
+
+  /*
+   * Damage control, not design: stop provider markup overflowing its column.
+   *
+   * :global because set:html content carries no scope attribute, so a plain
+   * descendant selector compiles to something that matches nothing.
+   */
+  .embed-block__body :global(img),
+  .embed-block__body :global(iframe) {
+    max-width: 100%;
+  }
+
+  .embed-block__body :global(iframe) {
+    border: 0;
+  }
+</style>

@@ -69,6 +69,9 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    events: Event;
+    pages: Page;
+    embeds: Embed;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +81,9 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    embeds: EmbedsSelect<false> | EmbedsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -123,6 +129,10 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * Admins can create and edit embeds, which hold raw HTML. Editors can place an existing embed on a page but not author a new one.
+   */
+  roles?: ('admin' | 'editor')[] | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -160,6 +170,387 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    small?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    medium?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    large?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  title: string;
+  /**
+   * Leave blank to auto-generate from title
+   */
+  slug?: string | null;
+  description: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  /**
+   * Optional. Events without art still render, in a text-only tile.
+   */
+  image?: (number | null) | Media;
+  imageOrientation: 'landscape' | 'portrait';
+  startDate: string;
+  /**
+   * Leave blank for a single-day event.
+   */
+  endDate?: string | null;
+  /**
+   * Runs all day, with no specific start or end time.
+   */
+  allDay?: boolean | null;
+  /**
+   * For a multi-day event, the daily opening time.
+   */
+  startTime?: string | null;
+  /**
+   * For a multi-day event, the daily closing time.
+   */
+  endTime?: string | null;
+  location: string;
+  rsvpLink?: string | null;
+  /**
+   * Auto sizes the tile from the event’s own content. Override only for marquee events.
+   */
+  bentoSize?: ('auto' | 'feature' | 'standard') | null;
+  /**
+   * Check to make this event visible on the site
+   */
+  published?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * Leave blank to auto-generate from the title.
+   */
+  slug?: string | null;
+  meta?: {
+    /**
+     * Optional. Overrides the page title in the browser tab and search engine results.
+     */
+    metaTitle?: string | null;
+    /**
+     * Optional. Overrides the page description in search engine results.
+     */
+    metaDescription?: string | null;
+  };
+  /**
+   * Add, reorder, and remove blocks to compose the page.
+   */
+  layout?:
+    | (HeroBlock | ContentBlock | ImageBlock | MediaWithContentBlock | GalleryBlock | CallToActionBlock | EmbedBlock)[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock".
+ */
+export interface HeroBlock {
+  eyebrow?: string | null;
+  heading: string;
+  intro?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  backgroundImage?: (number | null) | Media;
+  style: 'left' | 'center' | 'full';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'hero';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContentBlock".
+ */
+export interface ContentBlock {
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  style: 'narrow' | 'wide' | 'full';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'content';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageBlock".
+ */
+export interface ImageBlock {
+  image: number | Media;
+  /**
+   * Optional. Overrides the alt text from the uploaded image. If left blank, the image’s alt text will be used.
+   */
+  altText?: string | null;
+  caption?: string | null;
+  /**
+   * Optional. Makes the image clickable. When set, the alt text becomes the link’s name, so write it to say where the link goes rather than what the picture shows.
+   */
+  linkUrl?: string | null;
+  size: 'contained' | 'wide' | 'full';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'image';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaWithContentBlock".
+ */
+export interface MediaWithContentBlock {
+  media: number | Media;
+  /**
+   * Optional. Overrides the alt text from the uploaded media. If left blank, the media’s alt text will be used.
+   */
+  altText?: string | null;
+  caption?: string | null;
+  /**
+   * Optional. Makes the media clickable. Separate from the links below — use this when the image itself is the destination, and those when you want visible buttons.
+   */
+  linkUrl?: string | null;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  callToAction?:
+    | {
+        label: string;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Sets which side the image sits relative to content in desktop and tablet breakpoints.
+   */
+  imageAlignment: 'left' | 'right';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'mediaWithContent';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock".
+ */
+export interface GalleryBlock {
+  /**
+   * Optional. A title for the gallery block.
+   */
+  title?: string | null;
+  /**
+   * Optional. Sits between the title and the grid.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  images?:
+    | {
+        image: number | Media;
+        /**
+         * Optional. Overrides the alt text from the uploaded image.
+         */
+        altText?: string | null;
+        /**
+         * Optional. A caption for the image.
+         */
+        caption?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Select the number of columns for the gallery grid.
+   */
+  columns: '2' | '3' | '4';
+  /**
+   * Select the shape of the tiles in the gallery grid. All options except Natural will center-crop images to the selected aspect ratio. Natural will display images in their original aspect ratio, which may result in uneven rows.
+   */
+  tileShape: 'landscape' | 'square' | 'portrait' | 'natural';
+  /**
+   * If checked, the first image will be featured and span multiple columns.
+   */
+  featureFirst?: boolean | null;
+  /**
+   * If checked, clicking an image will open a slideshow modal. Uncheck for a static grid that is not clickable.
+   */
+  enableSlideshow?: boolean | null;
+  /**
+   * If checked, captions will be displayed below each image in the grid. If unchecked, captions will only be visible in the slideshow modal.
+   */
+  showCaptionsInGrid?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'gallery';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock".
+ */
+export interface CallToActionBlock {
+  title?: string | null;
+  description?: string | null;
+  label: string;
+  /**
+   * Use https:// for external links, and relative paths for internal links (e.g., /about).
+   */
+  url: string;
+  image?: (number | null) | Media;
+  style: 'basic' | 'featured' | 'image';
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'callToAction';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "EmbedBlock".
+ */
+export interface EmbedBlock {
+  /**
+   * Choose an embed. Ask an admin if the one you need isn’t listed.
+   */
+  embed: number | Embed;
+  /**
+   * Optional. Shown above the embed on this page only.
+   */
+  heading?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'embed';
+}
+/**
+ * Raw HTML from a third party. Only admins can create or edit these.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "embeds".
+ */
+export interface Embed {
+  id: number;
+  /**
+   * What editors will see in the chooser. Name it for where it goes.
+   */
+  title: string;
+  /**
+   * Optional note for editors — what this is, and where it belongs.
+   */
+  description?: string | null;
+  /**
+   * Paste the provider’s embed code. This runs on the live site exactly as written, including any <script> tags — check the source before saving.
+   */
+  html: string;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -192,6 +583,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'embeds';
+        value: number | Embed;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -240,6 +643,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  roles?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -274,6 +678,215 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        small?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        medium?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        large?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  description?: T;
+  image?: T;
+  imageOrientation?: T;
+  startDate?: T;
+  endDate?: T;
+  allDay?: T;
+  startTime?: T;
+  endTime?: T;
+  location?: T;
+  rsvpLink?: T;
+  bentoSize?: T;
+  published?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  meta?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+      };
+  layout?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        content?: T | ContentBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+        mediaWithContent?: T | MediaWithContentBlockSelect<T>;
+        gallery?: T | GalleryBlockSelect<T>;
+        callToAction?: T | CallToActionBlockSelect<T>;
+        embed?: T | EmbedBlockSelect<T>;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock_select".
+ */
+export interface HeroBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  backgroundImage?: T;
+  style?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContentBlock_select".
+ */
+export interface ContentBlockSelect<T extends boolean = true> {
+  content?: T;
+  style?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageBlock_select".
+ */
+export interface ImageBlockSelect<T extends boolean = true> {
+  image?: T;
+  altText?: T;
+  caption?: T;
+  linkUrl?: T;
+  size?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MediaWithContentBlock_select".
+ */
+export interface MediaWithContentBlockSelect<T extends boolean = true> {
+  media?: T;
+  altText?: T;
+  caption?: T;
+  linkUrl?: T;
+  content?: T;
+  callToAction?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        id?: T;
+      };
+  imageAlignment?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock_select".
+ */
+export interface GalleryBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        altText?: T;
+        caption?: T;
+        id?: T;
+      };
+  columns?: T;
+  tileShape?: T;
+  featureFirst?: T;
+  enableSlideshow?: T;
+  showCaptionsInGrid?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CallToActionBlock_select".
+ */
+export interface CallToActionBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  label?: T;
+  url?: T;
+  image?: T;
+  style?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "EmbedBlock_select".
+ */
+export interface EmbedBlockSelect<T extends boolean = true> {
+  embed?: T;
+  heading?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "embeds_select".
+ */
+export interface EmbedsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  html?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

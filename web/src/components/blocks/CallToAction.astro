@@ -1,0 +1,231 @@
+---
+// A prompt and a single link, in one of three presets.
+//
+// The image is decorative rather than a Figure: linking it would give the block two
+// links to the same destination, which a screen reader announces as two.
+
+import type { CallToActionBlock } from '../../types/payload'
+import ArrowSimple from '../arrows/ArrowSimple.astro'
+import Arrow from '../arrows/Arrow.astro'
+import ArrowWavy from '../arrows/ArrowWavy.astro'
+
+interface Props {
+  block: CallToActionBlock
+  /** Forwarded from the parent so reveal/stagger classes land on the root. */
+  class?: string
+}
+
+const { block, class: className } = Astro.props
+
+const showsImage = block.style === 'image' && Boolean(block.image)
+const isExternal = /^https?:\/\//i.test(block.url)
+
+/**
+ * The photo column is 34% of the 1200px container above the breakpoint — about
+ * 410px — and full width below it. Overstating this is how srcset stops saving
+ * anything, since the browser just picks the largest candidate.
+ */
+const IMAGE_SIZES = '(min-width: 768px) 420px, 100vw'
+---
+
+<section class:list={['cta-block', `cta-block--${block.style}`, className]}>
+  {
+    showsImage && block.image && (
+      <div class="cta-block__image">
+        <img
+          src={block.image.url}
+          srcset={block.image.srcset || undefined}
+          sizes={block.image.srcset ? IMAGE_SIZES : undefined}
+          width={block.image.width ?? undefined}
+          height={block.image.height ?? undefined}
+          alt={block.image.alt}
+          loading="lazy"
+        />
+      </div>
+    )
+  }
+
+  <div class="cta-block__body">
+    {block.title && <h2 class="cta-block__title">{block.title}</h2>}
+    {block.description && <p class="cta-block__description">{block.description}</p>}
+
+    {
+      block.url && block.label && (
+        <a
+          class:list={['cta__link', `cta__link--${block.style}`]}
+          href={block.url}
+          rel={isExternal ? 'noopener noreferrer' : undefined}
+        >
+          {block.label}
+          {block.style === 'basic' && <ArrowSimple class:list={['cta__arrow', `cta__arrow--${block.style}`]} />}
+          {block.style === 'featured' && <ArrowWavy class:list={['cta__arrow', `cta__arrow--${block.style}`]} />}
+          {block.style === 'image' && <Arrow class:list={['cta__arrow', `cta__arrow--${block.style}`]} />}
+        </a>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .cta-block {
+    max-width: var(--container-narrow);
+    margin-inline: auto;
+    padding-inline: var(--grid-gutter);
+  }
+
+  .cta-block__title {
+    margin: 0;
+  }
+
+  .cta-block__description {
+    margin-block: var(--space-4) var(--space-6);
+    color: var(--color-text-muted);
+  }
+
+  .cta-block__image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-card);
+  }
+
+  .cta-block--featured .cta-block__body {
+    padding: var(--space-8);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background-color: color-mix(in srgb, var(--color-text) 4%, transparent);
+  }
+
+  /* ------------------------------------------------------------------ image
+   *
+   * The photo overhangs a panel inset from the left. Stacked below the breakpoint,
+   * where the overlap has nowhere to go — the panel pseudo-element only appears
+   * above 768px.
+   */
+  .cta-block--image {
+    display: grid;
+    gap: 0;
+    max-width: var(--container-wide);
+    padding-block: var(--space-12);
+  }
+
+  .cta-block--image .cta-block__body {
+    padding: var(--space-8);
+    background-color: var(--color-surface);
+  }
+
+  /*
+   * Centre-cropped square, so any upload produces the same silhouette. `object-fit:
+   * cover` is required — without it the base rule's `height: auto` letterboxes.
+   */
+  .cta-block--image .cta-block__image img {
+    aspect-ratio: 1;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0;
+  }
+
+  :global(.cta__link--image) {
+    position: relative;
+    background: 0 !important;
+    color: var(--color-accent);
+    font-size: 1.2em;
+    margin-bottom: var(--space-4);
+  }
+
+:global(.cta__link--image:hover .cta__arrow) {
+  transform: translateX(1em);
+  transition: transform 0.2s ease-in-out;
+}
+
+  :global(.cta__arrow--image) {
+    width: 2em;
+    height: auto;
+    margin-inline: 0;
+    position: absolute;
+    right: -1.25em;
+    bottom: -0.75em;
+  }
+
+  :global(.cta__link) {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  :global(.cta__link--featured) {
+    position: relative;
+    font-size: 1.2em;
+    background: 0 !important;
+  }
+
+  :global(.cta__link--featured:hover) {
+    .cta__arrow {
+        transform: translateY(1em);
+        transition: transform 0.2s ease-in-out;
+    }
+  }
+
+  :global(.cta__arrow) {
+    display: inline-block;
+    margin-inline-start: var(--space-2);
+  }
+
+  :global(.cta__arrow--basic) {
+   rotate: 270deg;
+   height: 1em;
+   width: 1em;
+  }
+
+  :global(.cta__arrow--featured) {
+    height: 3.5em;
+    width: 1.5em;
+    rotate: 270deg;
+    position: absolute;
+    right: -1em;
+    bottom: -1.85em;
+  }
+
+
+  @media (min-width: 768px) {
+    .cta-block--image {
+      position: relative;
+      /* Photo takes roughly a third; the text column gets the rest. */
+      grid-template-columns: minmax(0, 34%) minmax(0, 1fr);
+      column-gap: clamp(var(--space-8), 5vw, var(--space-16));
+      align-items: start;
+    }
+
+    /* The panel, starting partway across the photo column so the photo overhangs it. */
+    .cta-block--image {
+      --cta-overhang: var(--space-10);
+    }
+
+    .cta-block--image::before {
+      content: '';
+      position: absolute;
+      z-index: 0;
+      inset-block: calc(var(--space-12) + var(--cta-overhang)) 0;
+      /*
+       * The end inset is the gutter, NOT 0. Insets resolve against the containing
+       * block's PADDING box, so `0` puts the panel outside .cta-block's
+       * padding-inline — flush to the viewport below --container-wide.
+       */
+      inset-inline: 16% var(--grid-gutter);
+      background-color: var(--color-surface);
+    }
+
+    /* Both columns sit above the panel; without this the panel paints over them. */
+    .cta-block--image > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* The panel already provides the fill above this breakpoint. */
+    .cta-block--image .cta-block__body {
+      background-color: transparent;
+      /* Heavier bottom padding, so the panel extends past the foot of the photo. */
+      padding: calc(var(--space-12) + var(--cta-overhang)) var(--space-10)
+        var(--space-16);
+    }
+  }
+</style>

@@ -1,0 +1,92 @@
+/* ==========================================================================
+   @font-face Declarations
+   CCA Brand Typography — four families:
+     Chimera Display  --font-display  ceremonial accents / numerals (sparingly)
+     Merriweather     --font-heading  headings
+     Lineto Brown     --font-body     body, UI, navigation
+     Roboto Mono      --font-mono     dates, times, code
+   ========================================================================== */
+
+/* Chimera Display — ceremonial accent face; see --font-display in themes.css. */
+@font-face {
+  font-family: "Chimera Display";
+  src: url("/fonts/ChimeraDisplay-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Lineto Brown — Primary sans-serif (body, UI, navigation) */
+@font-face {
+  font-family: "Lineto Brown";
+  src: url("/fonts/lineto-brown-light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Lineto Brown";
+  src: url("/fonts/lineto-brown-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Lineto Brown";
+  src: url("/fonts/lineto-brown-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Merriweather — Heading serif (h1–h6) */
+@font-face {
+  font-family: "Merriweather";
+  src: url("/fonts/merriweather_light-webfont.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Merriweather";
+  src: url("/fonts/merriweather-regular-webfont.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Merriweather";
+  src: url("/fonts/merriweather-bold-webfont.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Merriweather";
+  src: url("/fonts/merriweather-italic-webfont.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Roboto Mono — Monospace (dates, times, code in rich text) */
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("/fonts/roboto-mono-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("/fonts/roboto-mono-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}

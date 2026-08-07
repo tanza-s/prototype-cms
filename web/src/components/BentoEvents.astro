@@ -1,0 +1,78 @@
+---
+/**
+ * The grid view for the events list. Sizing and ordering come from ../lib/bento.ts;
+ * this only turns the packed result into cells.
+ */
+import { assignBentoLayout, SPAN } from '../lib/bento'
+import type { Event } from '../types/payload'
+import BentoEventCard from './BentoEventCard.astro'
+
+interface Props {
+  events: Event[]
+  class?: string
+}
+
+const { events, class: className } = Astro.props
+
+const items = assignBentoLayout(events)
+---
+
+<div class:list={['bento-grid', className]}>
+  {
+    items.map(({ event, size, past, accent }, i) => {
+      const { col, row } = SPAN[size]
+      // Spans travel as custom properties rather than as `grid-column` directly:
+      // an inline style would outrank the stylesheet and lock every breakpoint
+      // into the 4-column footprint.
+      const spans = `--col-4: ${col}; --col-2: ${Math.min(col, 2)}; --row: ${row};`
+      return (
+        <div
+          class:list={['bento-grid__cell', 'reveal', `stagger-${(i % 8) + 1}`]}
+          style={spans}
+        >
+          <BentoEventCard event={event} size={size} past={past} accent={accent} />
+        </div>
+      )
+    })
+  }
+</div>
+
+<style>
+  .bento-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-auto-rows: minmax(180px, auto);
+    /* The packer leaves no holes at 4 columns, so `dense` is inert there. It
+       earns its keep at the 2-column breakpoint, which isn't packed for. */
+    grid-auto-flow: dense;
+    gap: var(--grid-gutter);
+  }
+
+  .bento-grid__cell {
+    /* Single column below 768px: every tile is full width, spans are ignored. */
+    grid-column: span 1;
+    grid-row: span 1;
+    min-width: 0;
+  }
+
+  @media (min-width: 768px) {
+    .bento-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .bento-grid__cell {
+      grid-column: span var(--col-2);
+      grid-row: span var(--row);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .bento-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .bento-grid__cell {
+      grid-column: span var(--col-4);
+    }
+  }
+</style>

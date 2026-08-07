@@ -1,17 +1,155 @@
 ---
+import Layout from '../layouts/Layout.astro'
+import BentoEvents from '../components/BentoEvents.astro'
+import EventCard from '../components/EventCard.astro'
+import ViewToggle from '../components/ViewToggle.astro'
+import { fetchEvents } from '../lib/api'
 
+// Prerendered — see events/[slug].astro. This has no getStaticPaths, so its data
+// comes from the fetch below, which re-runs per request in dev. The grid is live
+// without a restart; only newly added ROUTES need one.
+export const prerender = true
+
+// Already filtered to published and sorted by startDate by the CMS query.
+// BentoEvents re-sorts for the grid (past events last); the list view keeps
+// the CMS order.
+const events = await fetchEvents()
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="2027 CCA Commencement">
+  <section class="hero">
+    <div class="container">
+      <p class="section-label">California College of the Arts</p>
+      <h1 class="hero__title">
+        <span class="u-display hero__year">2027</span>
+        <span class="hero__words">Commencement</span>
+      </h1>
+      <p class="hero__lede">Celebrating the Class of 2027.</p>
+    </div>
+  </section>
+
+  <section class="events container">
+    {
+      events.length > 0 ? (
+        <div class="events__group" data-view-group data-view="grid">
+          <header class="events__header">
+            <h2 class="events__heading">Celebration Events</h2>
+            <ViewToggle />
+          </header>
+
+          <div data-view-panel="grid">
+            <BentoEvents events={events} />
+          </div>
+
+          {/* hidden by default so the no-JS case lands on the grid rather than
+              rendering both panels stacked. */}
+          <div class="events__list" data-view-panel="list" hidden>
+            {events.map((event, i) => (
+              <EventCard event={event} columns={1} class:list={['reveal', `stagger-${(i % 8) + 1}`]} />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          <h2 class="events__heading">Celebration Events</h2>
+          <p class="events__empty u-muted">No events scheduled yet.</p>
+        </>
+      )
+    }
+  </section>
+
+  {/* Runs before the panels paint so a returning list-view visitor never sees
+      the grid flash. Inline and unbundled by design — a deferred module would
+      land after first paint and defeat the point. */}
+  <script is:inline>
+    ;(function () {
+      try {
+        if (localStorage.getItem('events-view') !== 'list') return
+      } catch {
+        return
+      }
+      var group = document.querySelector('[data-view-group]')
+      if (!group) return
+      group.dataset.view = 'list'
+      group.querySelectorAll('[data-view-panel]').forEach(function (panel) {
+        panel.hidden = panel.dataset.viewPanel !== 'list'
+      })
+      // aria-pressed drives the active-button styling, so it has to be correct
+      // pre-paint too or the highlight visibly jumps from Grid to List.
+      group.querySelectorAll('[data-view-set]').forEach(function (button) {
+        button.setAttribute('aria-pressed', String(button.dataset.viewSet === 'list'))
+      })
+    })()
+  </script>
+</Layout>
+
+<style>
+  .hero {
+    padding-block: var(--space-20) var(--space-16);
+    background: var(--gradient-hero);
+    border-bottom: 1px solid var(--color-border);
+    /* --gradient-hero is dark in every theme, so the ink here can't come from
+       --color-text (which flips light/dark with the theme). */
+    color: var(--color-on-dark);
+  }
+
+  .hero__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-4);
+    margin-block: var(--space-2) var(--space-4);
+  }
+
+  .hero__year {
+    font-size: var(--text-5xl);
+    line-height: 1;
+    color: var(--color-accent);
+  }
+
+  .hero__words {
+    font-size: var(--text-4xl);
+  }
+
+  .hero__lede {
+    font-size: var(--text-lg);
+    color: color-mix(in srgb, var(--color-on-dark) 80%, transparent);
+  }
+
+  .events {
+    padding-block: var(--space-16);
+  }
+
+  .events__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-block-end: var(--space-10);
+  }
+
+  .events__heading {
+    margin: 0;
+  }
+
+  /* One full-width card per row — EventCard's columns=1 layout. */
+  .events__list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--grid-gutter);
+  }
+
+  /* `display: grid` above is an author style, and author styles beat the UA
+     stylesheet's `[hidden] { display: none }` no matter the specificity — so
+     without this the hidden panel renders anyway and both views stack. */
+  [data-view-panel][hidden] {
+    display: none;
+  }
+
+  .events__empty {
+    padding-block: var(--space-12);
+    font-style: italic;
+    text-align: center;
+  }
+</style>

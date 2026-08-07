@@ -1,0 +1,47 @@
+---
+// Rich text at one of three measures. Owns only width and vertical rhythm; Prose
+// owns how the text itself looks.
+
+import type { ContentBlock } from '../../types/payload'
+import Prose from '../Prose.astro'
+
+interface Props {
+  block: ContentBlock
+  /** Forwarded from the parent so reveal/stagger classes land on the root. */
+  class?: string
+}
+
+const { block, class: className } = Astro.props
+---
+
+{
+  block.content && (
+    <section class:list={['content-block', `content-block--${block.style}`, className]}>
+      <Prose html={block.content} />
+    </section>
+  )
+}
+
+<style>
+  /* Variants set a custom property one rule consumes, so padding and centring
+     can't drift between them. */
+  .content-block {
+    max-width: var(--content-measure);
+    margin-inline: auto;
+    padding-block: var(--space-12);
+    padding-inline: var(--grid-gutter);
+  }
+
+  .content-block--narrow {
+    --content-measure: var(--container-narrow);
+  }
+
+  .content-block--wide {
+    --content-measure: var(--container-max);
+  }
+
+  /* "Full" here means unbounded, not unpadded — text keeps its gutter. */
+  .content-block--full {
+    --content-measure: none;
+  }
+</style>

@@ -1,0 +1,124 @@
+---
+/**
+ * GRID / LIST switch for the events section. Both views render server-side and CSS
+ * hides the inactive one, so every event stays in the HTML for crawlers.
+ *
+ * Usage: put this inside an element carrying `data-view-group`, alongside two
+ * children marked `data-view-panel="grid"` and `data-view-panel="list"`.
+ */
+interface Props {
+  class?: string
+}
+
+const { class: className } = Astro.props
+---
+
+<div class:list={['view-toggle', className]} role="group" aria-label="Event display">
+  <button type="button" class="view-toggle__button" data-view-set="grid" aria-pressed="true">
+    <svg class="view-toggle__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <rect x="1" y="1" width="6" height="6" rx="1"></rect>
+      <rect x="9" y="1" width="6" height="6" rx="1"></rect>
+      <rect x="1" y="9" width="6" height="6" rx="1"></rect>
+      <rect x="9" y="9" width="6" height="6" rx="1"></rect>
+    </svg>
+    Grid
+  </button>
+
+  <button type="button" class="view-toggle__button" data-view-set="list" aria-pressed="false">
+    <svg class="view-toggle__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <rect x="1" y="2" width="14" height="2" rx="1"></rect>
+      <rect x="1" y="7" width="14" height="2" rx="1"></rect>
+      <rect x="1" y="12" width="14" height="2" rx="1"></rect>
+    </svg>
+    List
+  </button>
+</div>
+
+<style>
+  .view-toggle {
+    display: inline-flex;
+    gap: var(--space-2);
+  }
+
+  .view-toggle__button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    font-family: inherit;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text);
+    background-color: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) var(--ease-out-expo),
+      border-color var(--duration-fast) var(--ease-out-expo),
+      color var(--duration-fast) var(--ease-out-expo);
+  }
+
+  .view-toggle__button:hover {
+    border-color: var(--color-accent);
+  }
+
+  .view-toggle__button[aria-pressed='true'] {
+    color: var(--color-on-accent);
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  .view-toggle__icon {
+    width: 0.9em;
+    height: 0.9em;
+    fill: currentColor;
+  }
+</style>
+
+<script>
+  const STORAGE_KEY = 'events-view'
+  type View = 'grid' | 'list'
+
+  /**
+   * `immediate` skips the scroll-reveal choreography. A hidden panel's .reveal cards
+   * never intersect, so after a click they would sit at opacity 0 until you scroll.
+   */
+  function apply(group: HTMLElement, view: View, immediate = false) {
+    group.dataset.view = view
+
+    group.querySelectorAll<HTMLButtonElement>('[data-view-set]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.viewSet === view))
+    })
+
+    group.querySelectorAll<HTMLElement>('[data-view-panel]').forEach((panel) => {
+      panel.hidden = panel.dataset.viewPanel !== view
+
+      if (immediate && !panel.hidden) {
+        panel.querySelectorAll('.reveal, .reveal-scale').forEach((el) => {
+          el.classList.add('is-visible')
+        })
+      }
+    })
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-view-group]').forEach((group) => {
+    // The inline script in the page has already set data-view from localStorage;
+    // read it back rather than re-deriving, so the two can't disagree.
+    const stored = group.dataset.view === 'list' ? 'list' : 'grid'
+    apply(group, stored)
+
+    group.querySelectorAll<HTMLButtonElement>('[data-view-set]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const view: View = button.dataset.viewSet === 'list' ? 'list' : 'grid'
+        apply(group, view, true)
+        try {
+          localStorage.setItem(STORAGE_KEY, view)
+        } catch {
+          // Private browsing can reject writes; the toggle still works this session.
+        }
+      })
+    })
+  })
+</script>

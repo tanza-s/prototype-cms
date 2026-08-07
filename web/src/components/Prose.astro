@@ -1,0 +1,17 @@
+---
+// CMS rich text, rendered. No opinion about width, position, or vertical rhythm —
+// the block using it owns those.
+//
+// set:html is safe because lib/richtext.ts escapes all text and whitelists href
+// schemes. The tags it can emit are listed above .prose in styles/global.css.
+
+interface Props {
+  /** HTML string from lexicalToHtml. Renders nothing at all when empty. */
+  html: string
+  class?: string
+}
+
+const { html, class: className } = Astro.props
+---
+
+{html && <div class:list={['prose', className]} set:html={html} />}

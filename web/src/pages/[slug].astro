@@ -1,0 +1,56 @@
+---
+import type { Page } from "../types/payload";
+import Layout from "../layouts/Layout.astro";
+import { fetchPages } from "../lib/pages";
+import BlockRenderer from "../components/blocks/BlockRenderer.astro";
+
+
+/**
+ * Prerendered in dev as well as production. Astro needs this value to be statically
+ * analyzable, and with no adapter configured nothing *could* render on demand — so
+ * don't make it conditional; it won't do what it looks like it does.
+ */
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const pages = await fetchPages();
+  return pages.map((page) => ({
+    params: { slug: page.slug },
+    // Pass the page through so the build doesn't refetch the collection per page.
+    props: { page },
+  }));
+}
+
+interface Props {
+  /** Supplied by getStaticPaths. Ignored in dev — see below. */
+  page?: Page;
+}
+
+/**
+ * In dev, refetch instead of trusting the prop: Astro caches getStaticPaths for the
+ * dev server's lifetime, so its props go stale as soon as anyone edits in the CMS.
+ * The build still uses the prop, keeping it to one request total.
+ *
+ * The route *list* stays cached, so a newly created page 404s until the dev server
+ * restarts.
+ */
+let page = import.meta.env.DEV ? undefined : Astro.props.page;
+if (!page) {
+  const pages = await fetchPages();
+  page = pages.find((candidate) => candidate.slug === Astro.params.slug);
+}
+if (!page) {
+  return new Response(null, { status: 404, statusText: "Page not found" });
+}
+// lib/pages.ts already resolves and truncates meta.description; this fallback is
+// for a page built entirely from images.
+const metaDescription =
+  page.meta.description || `${page.title} — 2027 CCA Commencement`;
+---
+
+<Layout
+  title={`${page.meta.title} - 2027 CCA Commencement`}
+  description={metaDescription}
+>
+  <BlockRenderer blocks={page.layout} />
+</Layout>

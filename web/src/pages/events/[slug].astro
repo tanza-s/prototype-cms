@@ -1,0 +1,237 @@
+---
+import type { Event } from "../../types/payload";
+import Layout from "../../layouts/Layout.astro";
+import { fetchEvents } from "../../lib/api";
+import { formatEventScheduleParts, toDateTimeAttr } from "../../lib/dates";
+import { truncateAtWord } from "../../lib/richtext";
+
+/**
+ * Prerendered in dev as well as production. Astro needs this value to be statically
+ * analyzable, and with no adapter configured nothing *could* render on demand — so
+ * don't make it conditional; it won't do what it looks like it does.
+ */
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const events = await fetchEvents();
+  return events.map((event) => ({
+    params: { slug: event.slug },
+    // Pass the event through so the build doesn't refetch the collection per page.
+    props: { event },
+  }));
+}
+
+interface Props {
+  /** Supplied by getStaticPaths. Ignored in dev — see below. */
+  event?: Event;
+}
+
+/**
+ * In dev, refetch instead of trusting the prop: Astro caches getStaticPaths for the
+ * dev server's lifetime, so its props go stale as soon as anyone edits in the CMS.
+ * The build still uses the prop, keeping it to one request total.
+ *
+ * The route *list* stays cached, so a newly published event 404s until the dev
+ * server restarts.
+ */
+let event = import.meta.env.DEV ? undefined : Astro.props.event;
+if (!event) {
+  const events = await fetchEvents();
+  event = events.find((candidate) => candidate.slug === Astro.params.slug);
+}
+if (!event) {
+  return new Response(null, { status: 404, statusText: "Event not found" });
+}
+
+// Kept as parts rather than one string so the hours can sit on their own line.
+// `long` gives the detail page the fuller wording ("Saturday, May 1, 2027").
+const schedule = formatEventScheduleParts(event, true);
+const metaDescription = event.excerpt
+  ? truncateAtWord(event.excerpt, 155)
+  : `${event.title} — 2027 CCA Commencement`;
+---
+
+<Layout
+  title={`${event.title} - 2027 CCA Commencement`}
+  description={metaDescription}
+>
+  <article class="event">
+    <div class="container-narrow event__body">
+      <a href="/" class="event__back">&larr; All events</a>
+
+      <p class="section-label">Commencement Event</p>
+      <h1 class="event__title">{event.title}</h1>
+      <div
+        class:list={[
+          "event__content",
+          `event__content--${event.imageOrientation}`,
+        ]}
+      >
+        {
+          event.image && (
+            <div
+              class:list={[
+                "event__hero",
+                `event__hero--${event.imageOrientation}`,
+              ]}
+            >
+              <img src={event.image.url} alt={event.image.alt} />
+            </div>
+          )
+        }
+
+        <dl class="event__meta">
+          <div class="event__meta-item">
+            <dt>Date &amp; Time</dt>
+            <dd>
+              <time class="u-mono event__schedule" datetime={toDateTimeAttr(event)}>
+                <span class="event__schedule-date">{schedule.date}</span>
+                {schedule.time && <span class="event__schedule-time">{schedule.time}</span>}
+              </time>
+            </dd>
+          </div>
+
+          <div class="event__meta-item">
+            <dt>Location</dt>
+            <dd>{event.location}</dd>
+          </div>
+
+          {
+            event.rsvpLink && (
+              <a
+                href={event.rsvpLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="button event__rsvp"
+              >
+                RSVP Now
+              </a>
+            )
+          }
+        </dl>
+      </div>
+
+      <hr class="section-divider" />
+
+      <div class="prose event__description" set:html={event.description} />
+    </div>
+  </article>
+</Layout>
+
+<style>
+  .event {
+    padding-block-end: var(--space-16);
+  }
+
+  .event__hero {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    --hero-max-height: 520px;
+  }
+
+  .event__hero--landscape {
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-8);
+    margin-bottom: var(--space-8);
+  }
+
+  .event__hero--portrait {
+    --hero-max-height: 720px;
+  }
+
+  .event__hero img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: var(--hero-max-height);
+    margin-inline: auto;
+  }
+
+  .event__content {
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  /* A portrait poster leaves a tall gutter beside it, so the meta moves up into
+     that space. Landscape art already fills the width and stays stacked. */
+  @media (min-width: 768px) {
+    .event__content--portrait {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 2fr);
+      align-items: start;
+      gap: var(--space-10);
+    }
+
+    /* auto-fit would still sit Date and Location side by side; in the narrower
+       side column they should read one per row. */
+    .event__content--portrait .event__meta {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+  }
+
+  .event__body {
+    padding-block-start: var(--space-12);
+  }
+
+  .event__back {
+    display: inline-block;
+    margin-block-end: var(--space-8);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  .event__back:hover {
+    color: var(--color-accent);
+  }
+
+  .event__title {
+    margin-block: var(--space-2) var(--space-10);
+  }
+
+  .event__meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-8);
+    margin: 0;
+  }
+
+  .event__meta dt {
+    margin-block-end: var(--space-2);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-accent);
+  }
+
+  .event__meta dd {
+    margin: 0;
+    color: var(--color-text);
+  }
+
+  /* Grid rather than block spans, so the <time> still reads as one unit to
+     assistive tech. */
+  .event__schedule {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .event__schedule-time {
+    color: var(--color-text-muted);
+  }
+
+  /* Grid items stretch to fill their track, so pin both axes to `start` and let
+     the button size to its own content. */
+  .event__rsvp {
+    align-self: start;
+    justify-self: start;
+    margin-block-start: var(--space-8);
+  }
+
+  .event__description {
+    font-size: var(--text-base);
+  }
+</style>
