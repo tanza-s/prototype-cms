@@ -22,16 +22,12 @@ export const Users: CollectionConfig = {
         { label: 'Editor', value: 'editor' },
       ],
       /**
-       * Both operations are gated, and both matter.
+       * Both operations are gated: `update` stops an editor granting themselves
+       * admin, `create` stops them making an admin account and signing in as that.
        *
-       * `update` stops an editor granting themselves admin from their own profile.
-       * `create` closes the same escalation by the back door — Payload lets any
-       * authenticated user create a user by default, so without it an editor could
-       * make an admin account and sign in as that instead.
-       *
-       * Deliberately not `required`: a required field with a defaultValue on a
-       * populated table is the case that forced scripts/add-image-orientation.sql,
-       * since Payload's defaults are application-level and never reach Postgres.
+       * Deliberately not `required` — Payload's defaults are application-level and
+       * never reach Postgres, so a required field with a defaultValue on a populated
+       * table needs a SQL backfill (see cms/scripts/).
        */
       access: {
         create: isAdminField,

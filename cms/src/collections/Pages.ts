@@ -3,6 +3,7 @@ import type { Access } from 'payload'
 import { CallToAction } from '../blocks/CallToAction'
 import { Content } from '../blocks/Content'
 import { Embed } from '../blocks/Embed'
+import { Gallery } from '../blocks/Gallery'
 import { Hero } from '../blocks/Hero'
 import { Image } from '../blocks/Image'
 import { MediaWithContent } from '../blocks/MediaWithContent'
@@ -61,7 +62,7 @@ export const Pages: CollectionConfig = {
       type: 'blocks',
       label: 'Page Content',
       minRows: 1,
-      blocks: [Hero, Content, Image, MediaWithContent, CallToAction, Embed],
+      blocks: [Hero, Content, Image, MediaWithContent, Gallery, CallToAction, Embed],
       admin: {
         initCollapsed: true, // a long page is unnavigable with every block expanded
         description: 'Add, reorder, and remove blocks to compose the page.',

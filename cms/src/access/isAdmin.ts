@@ -1,13 +1,11 @@
 import type { Access, FieldAccess } from 'payload'
 
 /**
- * Two functions for one idea, because Payload types collection access and field
- * access separately — and field access is boolean-only, so it can't return the
- * `Where` constraint that collection access can.
+ * Two functions for one idea: Payload types collection and field access separately,
+ * and field access is boolean-only.
  *
- * Both fail closed: a user with no roles is not an admin. That's what makes the
- * first admin a chicken-and-egg problem, solved once by scripts/seed-admin-role.sql
- * rather than by weakening the check here.
+ * Both fail closed, which makes the first admin a chicken-and-egg problem — solved
+ * by scripts/seed-admin-role.sql, not by weakening the check here.
  */
 function hasAdminRole(user: unknown): boolean {
   const roles = (user as { roles?: unknown } | null)?.roles

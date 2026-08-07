@@ -17,24 +17,18 @@ export const Media: CollectionConfig = {
   ],
   upload: {
     /**
-     * Widths taken from what the site actually renders, not round numbers:
+     * Widths taken from what the site actually renders:
      *
      * -  400  cards and the small bento tiles
      * -  768  the mobile breakpoint, and a half-width column on tablet
      * - 1200  a contained (900px) or wide (1400px) block on a retina display
      * - 1800  a full-bleed hero on a large display
      *
-     * Height is deliberately omitted. Supplying both dimensions makes sharp crop to
-     * fit; width alone scales and preserves the aspect ratio, which is what all of
-     * these placements want.
+     * Height is omitted on purpose — supplying both makes sharp crop to fit, where
+     * width alone scales and preserves the aspect ratio.
      *
-     * `withoutEnlargement: true` makes an image smaller than the target reuse the
-     * original instead of being upscaled. Leaving it undefined — the default —
-     * returns null for that size instead, which would put holes in the srcset.
-     *
-     * Everything is re-encoded to webp because the source material is mixed: the
-     * uploads on disk today range from an 8KB webp to a 6.9MB jpeg, and that jpeg is
-     * currently served at full size to every visitor.
+     * `withoutEnlargement: true` makes an undersized image reuse the original.
+     * Leaving it undefined returns null for that size, putting holes in the srcset.
      */
     imageSizes: [
       { name: 'thumbnail', width: 400, withoutEnlargement: true, formatOptions: WEBP },

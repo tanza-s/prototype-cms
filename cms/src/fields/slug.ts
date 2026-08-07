@@ -48,11 +48,9 @@ export function slugField({
         ({ data, originalDoc, value }) => {
           if (typeof value === 'string' && value.trim()) return slugify(value)
 
-          // Currently, the slug for an empty document will be auto-generated from the source field,
-          // on every save. This is friendly for editors who are changing page titles, but will result in broken
-          // links if the slug is used in a URL. If we want to lock the slug after the first save, we can
-          // check if the originalDoc exists and has a slug, and only auto-generate if it doesn't.
-          // if (originalDoc?.slug) return originalDoc.slug
+          // A blank slug regenerates from the source field on every save, so renaming
+          // a page changes its URL. To lock it after first save: `if (originalDoc?.slug)
+          // return originalDoc.slug`.
 
           // `data` holds the incoming payload, which on a partial update may not
           // carry the source field at all; fall back to the stored document so a

@@ -1,6 +1,5 @@
 import type { CollectionConfig } from 'payload'
 
-// Helper function to slugify text
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -11,14 +10,11 @@ function slugify(text: string): string {
 }
 
 /**
- * IMPORTANT: When adding hooks to this collection:
- * - Use `beforeChange` for field auto-generation (runs once on save)
- * - AVOID `beforeValidate` for recursive operations - it runs during validation
- *   and can cause infinite loops / stack overflow errors
- * - Keep hook logic simple and non-recursive
- * - Field-level hooks must return the FIELD VALUE. Only collection-level hooks
- *   return the whole `data` object; returning `data` from a field hook writes
- *   the entire document into that one field.
+ * When adding hooks here:
+ * - `beforeChange` for field auto-generation; `beforeValidate` runs during
+ *   validation and can recurse into a stack overflow.
+ * - Field-level hooks return the FIELD VALUE, not `data` — returning `data`
+ *   writes the whole document into that one field.
  */
 export const Events: CollectionConfig = {
   slug: 'events',
@@ -82,17 +78,12 @@ export const Events: CollectionConfig = {
       ],
     },
     /**
-     * Dates and times are deliberately separate fields.
+     * Dates and times are separate fields: a multi-day event's hours apply to every
+     * day in the run ("May 1–13, open 12–3pm"), which a pair of instants can't express.
      *
-     * A day-only value has no meaningful time-of-day, and a multi-day event's
-     * "viewing hours" apply to every day in the run rather than describing one
-     * continuous span — "May 1–13, open 12–3pm" is two dates and one daily time
-     * range, which a pair of dayAndTime instants cannot express.
-     *
-     * Day fields are stored at UTC midnight and must be READ IN UTC. The time
-     * fields are wall-clock values stored as an instant and must be read in the
-     * site's timezone. See web/src/lib/api.ts, which does both conversions once
-     * so nothing downstream has to think about it.
+     * Day fields are stored at UTC midnight and must be READ IN UTC; the time fields
+     * are wall-clock values and must be read in the site's timezone. web/src/lib/api.ts
+     * does both conversions once.
      */
     {
       name: 'startDate',

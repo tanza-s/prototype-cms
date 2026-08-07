@@ -1,11 +1,8 @@
 import type { Block } from 'payload'
 
 /**
- * Places an embed from the Embeds collection.
- *
- * The relationship is the access gate. An editor can add this block freely, but the
- * chooser only offers embeds an admin already created — so approved HTML can be
- * placed anywhere without anyone but an admin being able to author new HTML.
+ * Places an embed from the Embeds collection. The relationship is the access gate:
+ * the chooser only offers embeds an admin already created.
  */
 export const Embed: Block = {
   slug: 'embed',

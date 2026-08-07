@@ -290,7 +290,9 @@ export interface Page {
   /**
    * Add, reorder, and remove blocks to compose the page.
    */
-  layout?: (HeroBlock | ContentBlock | ImageBlock | MediaWithContentBlock | CallToActionBlock | EmbedBlock)[] | null;
+  layout?:
+    | (HeroBlock | ContentBlock | ImageBlock | MediaWithContentBlock | GalleryBlock | CallToActionBlock | EmbedBlock)[]
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -412,6 +414,85 @@ export interface MediaWithContentBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'mediaWithContent';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock".
+ */
+export interface GalleryBlock {
+  /**
+   * Optional. A title for the gallery block.
+   */
+  title?: string | null;
+  /**
+   * Optional. Sits between the title and the grid.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  images?:
+    | {
+        image: number | Media;
+        /**
+         * Optional. Overrides the alt text from the uploaded image.
+         */
+        altText?: string | null;
+        /**
+         * Optional. A caption for the image.
+         */
+        caption?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Select the number of columns for the gallery grid.
+   */
+  columns: '2' | '3' | '4';
+  /**
+   * Select the shape of the tiles in the gallery grid. All options except Natural will center-crop images to the selected aspect ratio. Natural will display images in their original aspect ratio, which may result in uneven rows.
+   */
+  tileShape: 'landscape' | 'square' | 'portrait' | 'natural';
+  /**
+   * If checked, the first image will be featured and span multiple columns.
+   */
+  featureFirst?: boolean | null;
+  /**
+   * If checked, clicking an image will open a slideshow modal. Uncheck for a static grid that is not clickable.
+   */
+  enableSlideshow?: boolean | null;
+  /**
+   * If checked, captions will be displayed below each image in the grid. If unchecked, captions will only be visible in the slideshow modal.
+   */
+  showCaptionsInGrid?: boolean | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'gallery';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -684,6 +765,7 @@ export interface PagesSelect<T extends boolean = true> {
         content?: T | ContentBlockSelect<T>;
         image?: T | ImageBlockSelect<T>;
         mediaWithContent?: T | MediaWithContentBlockSelect<T>;
+        gallery?: T | GalleryBlockSelect<T>;
         callToAction?: T | CallToActionBlockSelect<T>;
         embed?: T | EmbedBlockSelect<T>;
       };
@@ -745,6 +827,29 @@ export interface MediaWithContentBlockSelect<T extends boolean = true> {
         id?: T;
       };
   imageAlignment?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock_select".
+ */
+export interface GalleryBlockSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        altText?: T;
+        caption?: T;
+        id?: T;
+      };
+  columns?: T;
+  tileShape?: T;
+  featureFirst?: T;
+  enableSlideshow?: T;
+  showCaptionsInGrid?: T;
   id?: T;
   blockName?: T;
 }

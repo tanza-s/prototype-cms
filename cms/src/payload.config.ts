@@ -36,21 +36,13 @@ export default buildConfig({
   sharp,
   plugins: [
     /**
-     * Uploads go to Google Cloud Storage in any environment that names a bucket,
-     * and to local disk (cms/media/) otherwise.
+     * Uploads go to GCS in any environment naming a bucket, local disk otherwise.
+     * The deploy target is Cloud Run, whose filesystem is ephemeral and per-instance,
+     * so without this uploads vanish on redeploy and 404 across instances.
      *
-     * The gate matters because the deploy target is Cloud Run, whose filesystem is
-     * ephemeral and per-instance: without this, uploads would disappear on every
-     * redeploy, and an image uploaded to one instance would 404 on another. Every
-     * block in the Pages collection depends on uploads, so that failure would be
-     * obvious in production and invisible locally.
-     *
-     * Verified in 3.86.0 that switching the gate does NOT change the Postgres schema:
-     * the media table is identical either way, so local and Cloud SQL can't drift.
-     * `alwaysInsertFields` is set as forward-compatibility only — it is a no-op today
-     * (when disabled, gcsStorage returns the config before the flag is ever read; when
-     * enabled, the field-insertion path ignores it), but it becomes the default in
-     * Payload v4, and setting it now means that upgrade can't quietly add a column.
+     * Switching the gate does NOT change the Postgres schema, so local and Cloud SQL
+     * can't drift. `alwaysInsertFields` is a no-op today but becomes the default in
+     * Payload v4; setting it now means that upgrade can't quietly add a column.
      */
     gcsStorage({
       enabled: Boolean(process.env.GCS_BUCKET),
