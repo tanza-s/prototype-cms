@@ -18,10 +18,24 @@ Typecheck with `npx astro check` (no `scripts` entry for it).
 
 ### Dev-server gotchas
 
-- **A newly created page or event 404s until the dev server is restarted.** Astro
-  caches the `getStaticPaths()` route *list* for the server's lifetime. Edits to an
-  existing document appear on refresh — the component body refetches — but a new
-  route has nothing to refetch into. Fixing this properly needs an adapter.
+- **`astro dev` is a no-op while another dev server holds the lock.** It prints
+  "Dev server already running" and exits 0 — so re-running it to pick up CMS changes
+  silently leaves the stale server in place, and every restart-based fix below
+  appears not to work. `pnpm dev` runs `astro dev stop` first for this reason; a bare
+  `astro dev` does not. Check with `astro dev status` and compare the pid.
+- **The dynamic routes must not declare `export const prerender`.** They inherit it
+  from `output`, which `astro.config.mjs` sets to 'server' for `astro dev` and
+  'static' for `astro build` — that is the whole reason a new CMS document no longer
+  404s until restart. Pinning the literal re-breaks it in one direction or the other,
+  and `import.meta.env.PROD` is not an escape hatch: Astro reads the value with a
+  regex over the raw source that matches only `true`/`false`, so an expression fails
+  silently and falls back to the `output` default. Full reasoning in the config.
+- **If a route 404s anyway, the CMS is the first suspect, not the cache.** `fetchAll`
+  degrades to `[]` rather than throwing, so a CMS that is down or slow renders as
+  "document not found". This used to be far worse: the route list was cached per
+  route on first request, so an empty list stuck for the server's lifetime and took
+  existing documents down with it. Lookups are per request now, so a refresh is
+  enough once the CMS answers.
 - **A Payload dev server sitting on an interactive schema-push prompt hangs the
   build.** It accepts the connection and never answers; `lib/cms.ts` times out at 30s
   and degrades to "no documents", so the symptom is a page silently missing content.
