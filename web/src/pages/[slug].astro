@@ -5,13 +5,12 @@ import { fetchPages } from "../lib/pages";
 import BlockRenderer from "../components/blocks/BlockRenderer.astro";
 
 
-/**
- * Prerendered in dev as well as production. Astro needs this value to be statically
- * analyzable, and with no adapter configured nothing *could* render on demand — so
- * don't make it conditional; it won't do what it looks like it does.
- */
-export const prerender = true;
+// Deliberately no `export const prerender` — the route inherits it from `output`, so
+// it is prerendered by the build and on demand in dev. Adding the literal here pins
+// it to one mode: `true` brings back the cached-route-list 404s on newly created
+// pages, `false` stops the build prerendering it. See astro.config.mjs.
 
+// Build only; in dev the route is on demand and this never runs.
 export async function getStaticPaths() {
   const pages = await fetchPages();
   return pages.map((page) => ({
@@ -22,19 +21,13 @@ export async function getStaticPaths() {
 }
 
 interface Props {
-  /** Supplied by getStaticPaths. Ignored in dev — see below. */
+  /** Supplied by getStaticPaths, which only runs in production builds. */
   page?: Page;
 }
 
-/**
- * In dev, refetch instead of trusting the prop: Astro caches getStaticPaths for the
- * dev server's lifetime, so its props go stale as soon as anyone edits in the CMS.
- * The build still uses the prop, keeping it to one request total.
- *
- * The route *list* stays cached, so a newly created page 404s until the dev server
- * restarts.
- */
-let page = import.meta.env.DEV ? undefined : Astro.props.page;
+// In dev there is no getStaticPaths and therefore no prop, so this always refetches.
+// The build passes the prop through, keeping production to one request total.
+let page = Astro.props.page;
 if (!page) {
   const pages = await fetchPages();
   page = pages.find((candidate) => candidate.slug === Astro.params.slug);
